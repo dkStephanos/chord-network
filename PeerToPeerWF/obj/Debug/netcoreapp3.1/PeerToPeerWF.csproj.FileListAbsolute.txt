@@ -28,3 +28,4 @@ C:\Users\Stephanos\Documents\Fall 2020\Distributed Systems\ChordNetwork\PeerToPe
 C:\Users\Stephanos\Documents\Fall 2020\Distributed Systems\ChordNetwork\PeerToPeerWF\obj\Debug\netcoreapp3.1\PeerToPeerWF.dll
 C:\Users\Stephanos\Documents\Fall 2020\Distributed Systems\ChordNetwork\PeerToPeerWF\obj\Debug\netcoreapp3.1\PeerToPeerWF.pdb
 C:\Users\Stephanos\Documents\Fall 2020\Distributed Systems\ChordNetwork\PeerToPeerWF\obj\Debug\netcoreapp3.1\PeerToPeerWF.genruntimeconfig.cache
+C:\Users\Stephanos\Documents\Fall 2020\Distributed Systems\ChordNetwork\PeerToPeerWF\obj\Debug\netcoreapp3.1\PeerToPeerWF.Properties.Resources.resources

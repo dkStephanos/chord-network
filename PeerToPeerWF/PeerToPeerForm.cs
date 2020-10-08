@@ -22,9 +22,6 @@ namespace PeerToPeerWF
       public PeerToPeerForm()
       {
          InitializeComponent();
-            this.BackColor = Color.Black;
-            this.commandBox.BackColor = Color.DarkGray;
-            this.txtMain.BackColor = Color.Black;
          _serverResetEvent = new AutoResetEvent(false);
          _clients = new ConcurrentBag<PeerClient>();
       }
@@ -33,15 +30,27 @@ namespace PeerToPeerWF
       {
       }
 
-      private void btnSend_MouseClick(object sender, MouseEventArgs e)
-      {
-         var command = commandBox.Text;
-         ProcessCommand(command);
-         
-         commandBox.Clear();
-      }
+        private void SendCommand()
+        {
+            var command = commandBox.Text;
+            ProcessCommand(command);
 
-      private void ProcessCommand(string command)
+            commandBox.Clear();
+        }
+
+        private void btnSend_MouseClick(object sender, MouseEventArgs e)
+        {
+            SendCommand();
+        }
+
+
+        private void commandBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                SendCommand();
+        }
+
+        private void ProcessCommand(string command)
       {
          var length = command.Length;
          var index = command.IndexOf(' ');
@@ -181,5 +190,6 @@ namespace PeerToPeerWF
             () => _server.WaitForConnection()
          );
       }
-   }
+
+    }
 }
