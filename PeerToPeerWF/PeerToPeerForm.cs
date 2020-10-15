@@ -66,86 +66,8 @@ namespace PeerToPeerWF
             case "send":
                ProcessSend(parameters);
                break;
-            /*case "chat":            //Not fully implemented
-                ProcessChat(parameters);
-                break;*/
-         }
-         
+         }       
       }
-
-        /*Not fully implemented
-        private void ProcessChat(string parameters)
-        {
-            string[] paramArray = parameters.Split('|');
-            var length = paramArray[0].Length;
-                        var indexOfUser = paramArray[0].IndexOf(' ');
-            var user = paramArray[0].Substring(0, indexOfUser).ToLower();
-            var message = paramArray[0][(indexOfUser + 1)..length];
-            string[] historyArray;
-            string history;
-
-            // If there is a message history on the chat, handle that
-            if (paramArray.Length > 1) {
-               historyArray = paramArray[1].Remove(0,1).Split(' ');
-
-                // Check the message history, adding a new connection for each user not in clients
-                bool alreadyConnected = false;
-                foreach (var historyEntry in historyArray)
-                {
-                    foreach (var client in _server.clients)
-                    {
-                        if (client.GetUsername() == historyEntry.Split(':')[0])
-                        {
-                            alreadyConnected = true;
-                            continue;
-                        }
-                    }
-
-                    if (!alreadyConnected)
-                    {
-                        ProcessConnect(historyEntry);
-                    }
-
-                    alreadyConnected = false;
-                }
-
-                // Update the history, keeping amount of users the same, but appending self to list
-                history = _server.GetServerInfo() + " " + historyArray[1];
-            } else
-            {
-                // Create a message history with us as the only entry
-                history = _server.GetServerInfo();
-            }
-            
-            // Check if we have a connection to the addressed user, and if we do, send the message
-            bool foundAddressedUser = false;
-            Task.Factory.StartNew(
-                () => {
-                    foreach (var client in _server.clients)
-                    {
-                        if (client.GetUsername() == user)
-                        {
-                            client.SendRequest(message);
-                            foundAddressedUser = true;
-                            continue;
-                        }
-                    }
-                }
-             );
-            
-            // Otherwise, append the new message history, and forward it out to our connections
-            if(!foundAddressedUser)
-            {
-                Task.Factory.StartNew(
-                   () => {
-                       foreach (var client in _server.clients)
-                       {
-                           client.SendRequest("chat " + user + " " + message + " | " + history);
-                       }
-                   }
-                );
-            }
-        }*/
 
       private void ProcessSend(string parameters)
       {
@@ -183,6 +105,5 @@ namespace PeerToPeerWF
             () => _server.WaitForConnection()
          );
       }
-
     }
 }
