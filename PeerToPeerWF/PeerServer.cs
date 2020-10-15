@@ -13,6 +13,7 @@ namespace PeerToPeer
    public class PeerServer : IObservable<string>
    {
       private readonly ConcurrentBag<IObserver<string>> _observers;
+      public ConcurrentBag<PeerClient> clients;
       private readonly AutoResetEvent _autoResetEvent;
       private readonly int _portNumber;
       private IPHostEntry _ipHostInfo;
@@ -31,6 +32,7 @@ namespace PeerToPeer
       public PeerServer(AutoResetEvent autoResetEvent, string username, int portNumber = 11000)
       {
          _observers = new ConcurrentBag<IObserver<string>>();
+         clients = new ConcurrentBag<PeerClient>();
          _autoResetEvent = autoResetEvent;
          _portNumber = portNumber;
          _numberOfConnections = 0;

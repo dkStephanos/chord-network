@@ -17,13 +17,11 @@ namespace PeerToPeerWF
    {
       private AutoResetEvent _serverResetEvent;
       private PeerServer _server;
-      private ConcurrentBag<PeerClient> _clients;
-
+      
       public PeerToPeerForm()
       {
          InitializeComponent();
          _serverResetEvent = new AutoResetEvent(false);
-         _clients = new ConcurrentBag<PeerClient>();
       }
 
       private void PeerToPeerForm_Load(object sender, EventArgs e)
@@ -94,7 +92,7 @@ namespace PeerToPeerWF
                 bool alreadyConnected = false;
                 foreach (var historyEntry in historyArray)
                 {
-                    foreach (var client in _clients)
+                    foreach (var client in _server.clients)
                     {
                         if (client.GetUsername() == historyEntry.Split(':')[0])
                         {
@@ -123,7 +121,7 @@ namespace PeerToPeerWF
             bool foundAddressedUser = false;
             Task.Factory.StartNew(
                 () => {
-                    foreach (var client in _clients)
+                    foreach (var client in _server.clients)
                     {
                         if (client.GetUsername() == user)
                         {
@@ -140,7 +138,7 @@ namespace PeerToPeerWF
             {
                 Task.Factory.StartNew(
                    () => {
-                       foreach (var client in _clients)
+                       foreach (var client in _server.clients)
                        {
                            client.SendRequest("chat " + user + " " + message + " | " + history);
                        }
@@ -153,7 +151,7 @@ namespace PeerToPeerWF
       {
          Task.Factory.StartNew(
             () => {
-               foreach(var client in _clients)
+               foreach(var client in _server.clients)
                {
                   client.SendRequest(parameters);
                }
@@ -167,7 +165,7 @@ namespace PeerToPeerWF
          string username = parameters.Split(':')[0];
             int port = Int32.Parse(parameters.Split(':')[1]);
             var client = new PeerClient(username);
-         _clients.Add(client);
+         _server.clients.Add(client);
          client.Subscribe(new StringObserver(txtMain));
          client.SetUpRemoteEndPoint(_server.IPAddress, port);
          client.ConnectToRemoteEndPoint();
