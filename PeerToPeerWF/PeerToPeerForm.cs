@@ -66,14 +66,14 @@ namespace PeerToPeerWF
             case "send":
                ProcessSend(parameters);
                break;
-            case "chat":            //Not fully implemented
+            /*case "chat":            //Not fully implemented
                 ProcessChat(parameters);
-                break;
+                break;*/
          }
          
       }
 
-        //Not fully implemented
+        /*Not fully implemented
         private void ProcessChat(string parameters)
         {
             string[] paramArray = parameters.Split('|');
@@ -145,7 +145,7 @@ namespace PeerToPeerWF
                    }
                 );
             }
-        }
+        }*/
 
       private void ProcessSend(string parameters)
       {
@@ -161,10 +161,8 @@ namespace PeerToPeerWF
 
       private void ProcessConnect(string parameters)
       {
-         
-         string username = parameters.Split(':')[0];
-            int port = Int32.Parse(parameters.Split(':')[1]);
-            var client = new PeerClient(username);
+         int port = Int32.Parse(parameters);
+         var client = new PeerClient();
          _server.clients.Add(client);
          client.Subscribe(new StringObserver(txtMain));
          client.SetUpRemoteEndPoint(_server.IPAddress, port);
@@ -176,12 +174,9 @@ namespace PeerToPeerWF
 
       private void ProcessSet(string parameters)
       {
-         var options = parameters.Split(':');
-         txtMain.Text += "User: " + options[0] + Environment.NewLine;
-         txtMain.Text += "Port: " + options[1] + Environment.NewLine;
-         int port = Int32.Parse(options[1]);
-         string username = options[0].ToLower();
-         _server = new PeerServer(_serverResetEvent, username, port);
+         txtMain.Text += "Port: " + parameters + Environment.NewLine;
+         int port = Int32.Parse(parameters);
+         _server = new PeerServer(_serverResetEvent, port);
          _server.Subscribe(new StringObserver(txtMain));
          _server.StartListening();
          Task.Factory.StartNew(

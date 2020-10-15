@@ -16,16 +16,14 @@ namespace PeerToPeer
       private int _serverPort;
       private IPEndPoint _remoteEP;
       private Socket _sender;
-      string _username;
-        private int _clientPort;
+      private int _clientPort;
 
-      public PeerClient(string username)
+      public PeerClient()
       {
          _observers = new ConcurrentBag<IObserver<string>>();
          _serverIpAddress = null;
          _serverPort = 11000;
          _remoteEP = null;
-         _username = username;
       }
 
       public void SetUpRemoteEndPoint(IPAddress serverIpAddress, int serverPort)
@@ -47,11 +45,6 @@ namespace PeerToPeer
          ReportMessage($"SENDING:{request}");
          byte[] msg = Encoding.ASCII.GetBytes(request+"<EOF>");
          _sender.Send(msg);
-      }
-
-      public string GetUsername()
-      {
-            return _username;
       }
 
         public string GetClientPort()

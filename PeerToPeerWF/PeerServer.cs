@@ -21,7 +21,7 @@ namespace PeerToPeer
       private Socket _listener;
       private int _numberOfConnections;
       public int NumberOfConnections { get { return _numberOfConnections; } }
-      private string _username;
+      private string _chordID;
 
       public int BackLog { get; set; } = 10;
 
@@ -29,20 +29,19 @@ namespace PeerToPeer
 
       public IPAddress IPAddress { get; private set; }
 
-      public PeerServer(AutoResetEvent autoResetEvent, string username, int portNumber = 11000)
+      public PeerServer(AutoResetEvent autoResetEvent, int portNumber = 11000)
       {
          _observers = new ConcurrentBag<IObserver<string>>();
          clients = new ConcurrentBag<PeerClient>();
          _autoResetEvent = autoResetEvent;
          _portNumber = portNumber;
          _numberOfConnections = 0;
-         _username = username;
          SetUpLocalEndPoint();
       }
 
       public string GetServerInfo()
       {
-            return _username + ':' + _portNumber.ToString();
+            return _chordID + ':' + _portNumber.ToString();
       }
 
       private void SetUpLocalEndPoint()
