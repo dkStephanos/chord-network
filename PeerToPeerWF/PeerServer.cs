@@ -7,42 +7,63 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Security.Cryptography;
+
 
 namespace PeerToPeer
 {
-   public class PeerServer : IObservable<string>
-   {
-      private readonly ConcurrentBag<IObserver<string>> _observers;
-      public ConcurrentBag<PeerClient> clients;
-      private readonly AutoResetEvent _autoResetEvent;
-      private readonly int _portNumber;
-      private IPHostEntry _ipHostInfo;
-      private IPEndPoint _localEndPoint;
-      private Socket _listener;
-      private int _numberOfConnections;
-      public int NumberOfConnections { get { return _numberOfConnections; } }
-      private string _chordID;
+    public class PeerServer : IObservable<string>
+    {
+        private readonly ConcurrentBag<IObserver<string>> _observers;
+        public ConcurrentBag<PeerClient> clients;
+        private readonly AutoResetEvent _autoResetEvent;
+        private readonly int _portNumber;
+        private IPHostEntry _ipHostInfo;
+        private IPEndPoint _localEndPoint;
+        private Socket _listener;
+        private int _numberOfConnections;
+        public int NumberOfConnections { get { return _numberOfConnections; } }
 
-      public int BackLog { get; set; } = 10;
+        // ChordID used to mark position in chord, default to 1 for initial chord, updated based on port number in constructor
+        public int ChordID { get; set; } = 1;
 
-      public bool TimeToExit { get; set; } = false;
+        public int BackLog { get; set; } = 10;
 
-      public IPAddress IPAddress { get; private set; }
+        public bool TimeToExit { get; set; } = false;
 
-      public PeerServer(AutoResetEvent autoResetEvent, int portNumber = 11000)
-      {
-         _observers = new ConcurrentBag<IObserver<string>>();
-         clients = new ConcurrentBag<PeerClient>();
-         _autoResetEvent = autoResetEvent;
-         _portNumber = portNumber;
-         _numberOfConnections = 0;
-         SetUpLocalEndPoint();
-      }
+        public IPAddress IPAddress { get; private set; }
 
-      public string GetServerInfo()
-      {
-            return _chordID + ':' + _portNumber.ToString();
-      }
+        public PeerServer(AutoResetEvent autoResetEvent, int portNumber = 11000)
+        {
+            _observers = new ConcurrentBag<IObserver<string>>();
+            clients = new ConcurrentBag<PeerClient>();
+            _autoResetEvent = autoResetEvent;
+            _portNumber = portNumber;
+            _numberOfConnections = 0;
+            SetUpLocalEndPoint();
+            ChordID = portNumber == 11000 ? 1 : hashPortToNodeID(portNumber);
+        }
+
+        private int hashPortToNodeID(int portNumber)
+        {
+            // Using SHA256 hashing, to convert the portNumber as a string to a hashed integer
+            using (var sha256 = new SHA256Managed())
+            {
+                // Here we hash the port and convert to an int and make sure it is positive. 
+                // We then need to reduce it to a value between 2-100 (100 is our maxNodes and 1 is our initial node)
+                return Math.Abs(BitConverter.ToInt32(sha256.ComputeHash(Encoding.UTF8.GetBytes(portNumber.ToString())), 0)) % 98 + 2;
+            }
+        }
+
+        public string GetServerInfo()
+        {
+            return ChordID + ':' + _portNumber.ToString();
+        }
+
+        public void ReportServerInfo()
+        {
+            ReportMessage("Server Info: " + ChordID + ':' + _portNumber.ToString());
+        }
 
       private void SetUpLocalEndPoint()
       {

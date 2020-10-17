@@ -69,31 +69,6 @@ namespace PeerToPeerWF
          }       
       }
 
-      private void ProcessSend(string parameters)
-      {
-         Task.Factory.StartNew(
-            () => {
-               foreach(var client in _server.clients)
-               {
-                  client.SendRequest(parameters);
-               }
-            }
-         );
-      }
-
-      private void ProcessConnect(string parameters)
-      {
-         int port = Int32.Parse(parameters);
-         var client = new PeerClient();
-         _server.clients.Add(client);
-         client.Subscribe(new StringObserver(txtMain));
-         client.SetUpRemoteEndPoint(_server.IPAddress, port);
-         client.ConnectToRemoteEndPoint();
-            Task.Factory.StartNew(
-            () => client.ReceiveResponse()
-         ); 
-      }
-
       private void ProcessSet(string parameters)
       {
          txtMain.Text += "Port: " + parameters + Environment.NewLine;
@@ -101,9 +76,35 @@ namespace PeerToPeerWF
          _server = new PeerServer(_serverResetEvent, port);
          _server.Subscribe(new StringObserver(txtMain));
          _server.StartListening();
+            _server.ReportServerInfo();
          Task.Factory.StartNew(
             () => _server.WaitForConnection()
          );
       }
+
+        private void ProcessConnect(string parameters)
+        {
+            int port = Int32.Parse(parameters);
+            var client = new PeerClient();
+            _server.clients.Add(client);
+            client.Subscribe(new StringObserver(txtMain));
+            client.SetUpRemoteEndPoint(_server.IPAddress, port);
+            client.ConnectToRemoteEndPoint();
+            Task.Factory.StartNew(
+            () => client.ReceiveResponse()
+         );
+        }
+
+        private void ProcessSend(string parameters)
+        {
+            Task.Factory.StartNew(
+               () => {
+                   foreach (var client in _server.clients)
+                   {
+                       client.SendRequest(parameters);
+                   }
+               }
+            );
+        }
     }
 }
