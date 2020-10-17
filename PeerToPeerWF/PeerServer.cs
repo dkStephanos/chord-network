@@ -124,9 +124,7 @@ namespace PeerToPeer
                   shutdown = true;
                   break;
                }
-               // Process the incoming data
-               byte[] msg = Encoding.ASCII.GetBytes(request);
-               handler.Send(msg);
+               HandleMessage(request);
 
             }
          } while (!shutdown);
@@ -136,6 +134,25 @@ namespace PeerToPeer
 
          handler.Shutdown(SocketShutdown.Both);
          handler.Close();
+      }
+
+      public void HandleMessage(string message)
+      {
+         string[] parameters = message.Split(' ');
+
+         switch(parameters[0])
+         {
+            case "join":
+               HandleJoin(parameters);
+               break;
+            default:
+               break;
+         }
+      }
+
+      public void HandleJoin(string[] parameters)
+      {
+         ReportMessage("Inside HandleJoin" + parameters[0] + parameters[1]);
       }
 
       public IDisposable Subscribe(IObserver<string> observer)

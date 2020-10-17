@@ -66,6 +66,9 @@ namespace PeerToPeerWF
             case "send":
                ProcessSend(parameters);
                break;
+            case "join":
+               ProcessJoin(parameters);
+               break;
          }       
       }
 
@@ -76,7 +79,7 @@ namespace PeerToPeerWF
          _server = new PeerServer(_serverResetEvent, port);
          _server.Subscribe(new StringObserver(txtMain));
          _server.StartListening();
-            _server.ReportServerInfo();
+         _server.ReportServerInfo();
          Task.Factory.StartNew(
             () => _server.WaitForConnection()
          );
@@ -106,5 +109,17 @@ namespace PeerToPeerWF
                }
             );
         }
+
+      private void ProcessJoin(string parameters)
+      {
+         Task.Factory.StartNew(
+               () => {
+                  foreach (var client in _server.clients)
+                  {
+                     client.SendRequest("join " + parameters);
+                  }
+               }
+            );
+      }
     }
 }
