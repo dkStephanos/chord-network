@@ -32,7 +32,7 @@ namespace PeerToPeer
          _serverPort = serverPort;
          _remoteEP = new IPEndPoint(_serverIpAddress, _serverPort);
       }
-
+    
       public void ConnectToRemoteEndPoint()
       {
          _sender = new Socket(_serverIpAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -47,12 +47,12 @@ namespace PeerToPeer
          _sender.Send(msg);
       }
 
-        public string GetClientPort()
-        {
-            return _clientPort.ToString();
-        }
+      public string GetClientPort()
+      {
+          return _clientPort.ToString();
+      }
 
-        public void ReceiveResponse()
+      public void ReceiveResponse()
       {
          string response;
          do
@@ -60,14 +60,10 @@ namespace PeerToPeer
             int bytesRec = _sender.Receive(_bytes);
             response = Encoding.ASCII.GetString(_bytes, 0, bytesRec);
             ReportMessage($"RECEIVED:{response}");
-            if(response.Contains("chat"))
-                {
-                    SendRequest(response);
-                }
             } while (response != "Exit");
       }
 
-           public IDisposable Subscribe(IObserver<string> observer)
+      public IDisposable Subscribe(IObserver<string> observer)
       {
          if (!_observers.Contains(observer))
             _observers.Add(observer);
