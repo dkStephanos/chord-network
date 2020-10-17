@@ -14,56 +14,59 @@ namespace PeerToPeer
 {
     public class PeerServer : IObservable<string>
     {
-        private readonly ConcurrentBag<IObserver<string>> _observers;
-        public ConcurrentBag<PeerClient> clients;
-        private readonly AutoResetEvent _autoResetEvent;
-        private readonly int _portNumber;
-        private IPHostEntry _ipHostInfo;
-        private IPEndPoint _localEndPoint;
-        private Socket _listener;
-        private int _numberOfConnections;
-        public int NumberOfConnections { get { return _numberOfConnections; } }
+      private readonly ConcurrentBag<IObserver<string>> _observers;
+      public ConcurrentBag<PeerClient> clients;
+      private readonly AutoResetEvent _autoResetEvent;
+      private readonly int _portNumber;
+      private IPHostEntry _ipHostInfo;
+      private IPEndPoint _localEndPoint;
+      private Socket _listener;
+      private int _numberOfConnections;
+      private ConcurrentQueue<string> _messages;
+       
+      public int NumberOfConnections { get { return _numberOfConnections; } }
 
-        // ChordID used to mark position in chord, default to 1 for initial chord, updated based on port number in constructor
-        public int ChordID { get; set; } = 1;
+      // ChordID used to mark position in chord, default to 1 for initial chord, updated based on port number in constructor
+      public int ChordID { get; set; } = 1;
 
-        public int BackLog { get; set; } = 10;
+      public int BackLog { get; set; } = 10;
 
-        public bool TimeToExit { get; set; } = false;
+      public bool TimeToExit { get; set; } = false;
 
-        public IPAddress IPAddress { get; private set; }
+      public IPAddress IPAddress { get; private set; }
 
-        public PeerServer(AutoResetEvent autoResetEvent, int portNumber = 11000)
-        {
-            _observers = new ConcurrentBag<IObserver<string>>();
-            clients = new ConcurrentBag<PeerClient>();
-            _autoResetEvent = autoResetEvent;
-            _portNumber = portNumber;
-            _numberOfConnections = 0;
-            SetUpLocalEndPoint();
-            ChordID = portNumber == 11000 ? 1 : hashPortToNodeID(portNumber);
-        }
+      public PeerServer(AutoResetEvent autoResetEvent, int portNumber = 11000)
+      {
+         _observers = new ConcurrentBag<IObserver<string>>();
+         clients = new ConcurrentBag<PeerClient>();
+         _messages = new ConcurrentQueue<string>();
+         _autoResetEvent = autoResetEvent;
+         _portNumber = portNumber;
+         _numberOfConnections = 0;
+         SetUpLocalEndPoint();
+         ChordID = portNumber == 11000 ? 1 : hashPortToNodeID(portNumber);
+      }
 
-        private int hashPortToNodeID(int portNumber)
-        {
-            // Using SHA256 hashing, to convert the portNumber as a string to a hashed integer
-            using (var sha256 = new SHA256Managed())
-            {
-                // Here we hash the port and convert to an int and make sure it is positive. 
-                // We then need to reduce it to a value between 2-100 (100 is our maxNodes and 1 is our initial node)
-                return Math.Abs(BitConverter.ToInt32(sha256.ComputeHash(Encoding.UTF8.GetBytes(portNumber.ToString())), 0)) % 98 + 2;
-            }
-        }
+      private int hashPortToNodeID(int portNumber)
+      {
+         // Using SHA256 hashing, to convert the portNumber as a string to a hashed integer
+         using (var sha256 = new SHA256Managed())
+         {
+               // Here we hash the port and convert to an int and make sure it is positive. 
+               // We then need to reduce it to a value between 2-100 (100 is our maxNodes and 1 is our initial node)
+               return Math.Abs(BitConverter.ToInt32(sha256.ComputeHash(Encoding.UTF8.GetBytes(portNumber.ToString())), 0)) % 98 + 2;
+         }
+      }
 
-        public string GetServerInfo()
-        {
-            return ChordID + ':' + _portNumber.ToString();
-        }
+      public string GetServerInfo()
+      {
+         return ChordID + ':' + _portNumber.ToString();
+      }
 
-        public void ReportServerInfo()
-        {
-            ReportMessage("Server Info: " + ChordID + ':' + _portNumber.ToString());
-        }
+      public void ReportServerInfo()
+      {
+         ReportMessage("Server Info: " + ChordID + ':' + _portNumber.ToString());
+      }
 
       private void SetUpLocalEndPoint()
       {
@@ -99,26 +102,34 @@ namespace PeerToPeer
          byte[] buffer = new byte[1024];
          string data;
          string request;
+         bool shutdown = false;
          do
          {
             data = "";
             // Process the connection to read the incoming data
-            while (true)
+            int bytesRec = handler.Receive(buffer);
+            data += Encoding.ASCII.GetString(buffer, 0, bytesRec);
+            string[] bufferMsgs = data.Split("<EOF>");
+            foreach (string bufferMsg in bufferMsgs)
             {
-               int bytesRec = handler.Receive(buffer);
-               data += Encoding.ASCII.GetString(buffer, 0, bytesRec);
-               int index = data.IndexOf("<EOF>");
-               if (index > -1)
+               if (bufferMsg != "") _messages.Enqueue(bufferMsg);
+            }
+            // Drain (empty) the message que, passing each off to the HandleMessage question to perform neccessary operation
+            while (_messages.Count > 0)
+            {
+               _messages.TryDequeue(out request);
+               ReportMessage($"RECEIVED:{request}");
+               if (request == "Exit")
                {
-                  request = data.Substring(0, index);
+                  shutdown = true;
                   break;
                }
+               // Process the incoming data
+               byte[] msg = Encoding.ASCII.GetBytes(request);
+               handler.Send(msg);
+
             }
-            ReportMessage($"RECEIVED:{request}");
-            // Process the incoming data
-            byte[] msg = Encoding.ASCII.GetBytes(request);
-            handler.Send(msg);
-         } while (request != "Exit");
+         } while (!shutdown);
 
          Interlocked.Decrement(ref _numberOfConnections);
          ReportMessage($"Number of connections: {_numberOfConnections}");
