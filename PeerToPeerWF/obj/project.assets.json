@@ -14,9 +14,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Stephanos\\Documents\\Fall 2020\\Distributed Systems\\ChordNetwork\\PeerToPeerWF\\ChordNode.csproj",
-      "projectName": "ChordNode",
-      "projectPath": "C:\\Users\\Stephanos\\Documents\\Fall 2020\\Distributed Systems\\ChordNetwork\\PeerToPeerWF\\ChordNode.csproj",
+      "projectUniqueName": "C:\\Users\\Stephanos\\Documents\\Fall 2020\\Distributed Systems\\ChordNetwork\\PeerToPeerWF\\ChordNodeServer.csproj",
+      "projectName": "ChordNodeServer",
+      "projectPath": "C:\\Users\\Stephanos\\Documents\\Fall 2020\\Distributed Systems\\ChordNetwork\\PeerToPeerWF\\ChordNodeServer.csproj",
       "packagesPath": "C:\\Users\\Stephanos\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\Stephanos\\Documents\\Fall 2020\\Distributed Systems\\ChordNetwork\\PeerToPeerWF\\obj\\",
       "projectStyle": "PackageReference",

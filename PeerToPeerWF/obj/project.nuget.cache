@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "JK3pxGSy3v3SRXsC/UqGgz++bNF0j0G5kdDT/a3ixA34tEqPnAC77D7Hm0LFXbFWiMsnPNU4jiKOIWSmaAShjA==",
+  "dgSpecHash": "KtcMvwP7dB/b+TN7+EtIeG9TjgsfE81Pt+r0xlLLWHNPFPWBxvYo8wpB6ysBV8KIuYSqZl3r45QsDd1R1E1iDA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Stephanos\\Documents\\Fall 2020\\Distributed Systems\\ChordNetwork\\PeerToPeerWF\\ChordNode.csproj",
+  "projectFilePath": "C:\\Users\\Stephanos\\Documents\\Fall 2020\\Distributed Systems\\ChordNetwork\\PeerToPeerWF\\ChordNodeServer.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
