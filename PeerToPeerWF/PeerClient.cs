@@ -41,6 +41,13 @@ namespace PeerToPeer
          ReportMessage($"Socket connected to {_sender.RemoteEndPoint}");
       }
 
+      public void Disconnect()
+      {
+         // Release the socket & disconnect
+         _sender.Shutdown(SocketShutdown.Both);
+         _sender.Disconnect(true);
+      }
+
       public void SendRequest(string request)
       {
          ReportMessage($"SENDING:{request}");

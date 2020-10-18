@@ -13,7 +13,7 @@ namespace PeerToPeer
     public class PeerServer : IObservable<string>
     {
       private readonly ConcurrentBag<IObserver<string>> _observers;
-      public ConcurrentBag<PeerClient> clients;
+      public ConcurrentDictionary<int, PeerClient> clients;
       private readonly AutoResetEvent _autoResetEvent;
       private readonly int _portNumber;
       private IPHostEntry _ipHostInfo;
@@ -34,7 +34,7 @@ namespace PeerToPeer
       public PeerServer(AutoResetEvent autoResetEvent, int portNumber = 11000)
       {
          _observers = new ConcurrentBag<IObserver<string>>();
-         clients = new ConcurrentBag<PeerClient>();
+         clients = new ConcurrentDictionary<int, PeerClient>();
          _messages = new ConcurrentQueue<string>();
          _autoResetEvent = autoResetEvent;
          _portNumber = portNumber;
@@ -93,12 +93,24 @@ namespace PeerToPeer
       public PeerClient AddClient(int nodeID, int portNumber)
       {
          var client = new PeerClient();
-         clients.Add(client);
+         clients.TryAdd(nodeID, client);
          client.SetUpRemoteEndPoint(IPAddress, portNumber);
          client.ConnectToRemoteEndPoint();
          client.ChordID = nodeID;
 
          return client;
+      }
+
+      public void DisconnectClient(int nodeID)
+      {
+         foreach (var client in clients)
+         {
+            if (client.Key == nodeID)
+            {
+               client.Value.Disconnect();
+               break;
+            }
+         }
       }
 
       public IDisposable Subscribe(IObserver<string> observer)
@@ -203,17 +215,13 @@ namespace PeerToPeer
 
          } else // Else, we forward the join message to our successor
          {
-            // Loop through our clients, until we get our successor
-            foreach(PeerClient client in clients)
-            {
-               // Once we find it, forward the join request, report a status message, and break out of the loop
-               if (client.ChordID == node.SuccessorID)
-               {
-                  client.SendRequest("join " + joiningID + ":" + joiningPortNumber);
-                  ReportMessage("Forwarded join request to node: " + node.SuccessorID);
-                  break;
-               }
-            }
+            // Get our successor from the clients dict
+            PeerClient client;
+            clients.TryGetValue(node.SuccessorID, out client);
+
+            // Once we have it, forward the join request, report a status message, and break out of the loop
+            client.SendRequest("join " + joiningID + ":" + joiningPortNumber);
+            ReportMessage("Forwarded join request to node: " + node.SuccessorID);
          }
       }
 
@@ -228,13 +236,14 @@ namespace PeerToPeer
          node.SuccessorPortNumber = Int32.Parse(successorNodeData[1]);
 
          // Don't add a new client if our predecessor is the node we asked to join (which will be the only node in our clients bag)
-         PeerClient client;
-         clients.TryPeek(out client);
-         if (client.ChordID != node.PredecessorID) AddClient(node.PredecessorID, node.PredecessorPortNumber);
+         foreach(var client in clients)
+         {
+            if (client.Value.ChordID != node.PredecessorID) AddClient(node.PredecessorID, node.PredecessorPortNumber);
 
-         // Don't double add the client if our predeccessor and successor are currently the same node
-         if (node.PredecessorID != node.SuccessorID) AddClient(node.SuccessorID, node.SuccessorPortNumber);
-
+            // Don't double add the client if our predeccessor and successor are currently the same node
+            if (node.PredecessorID != node.SuccessorID) AddClient(node.SuccessorID, node.SuccessorPortNumber);
+         }
+         
          // Finally, report a success message with our predecessor and successor data to confirm Chord joined
          ReportMessage("Node " + node.ChordID + " joined Chord. Predecessor: " + node.PredecessorID + ", Successor: " + node.SuccessorID);
       }

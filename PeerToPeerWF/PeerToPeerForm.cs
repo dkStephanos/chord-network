@@ -90,7 +90,7 @@ namespace PeerToPeerWF
             int nodeID = Int32.Parse(parameters.Split(':')[0]);
             int port = Int32.Parse(parameters.Split(':')[1]);
             var client = new PeerClient();
-            _server.clients.Add(client);
+            _server.clients.TryAdd(nodeID, client);
             client.Subscribe(new StringObserver(txtMain));
             client.SetUpRemoteEndPoint(_server.IPAddress, port);
             client.ConnectToRemoteEndPoint();
@@ -106,7 +106,7 @@ namespace PeerToPeerWF
                () => {
                    foreach (var client in _server.clients)
                    {
-                       client.SendRequest(parameters);
+                       client.Value.SendRequest(parameters);
                    }
                }
             );
@@ -118,7 +118,7 @@ namespace PeerToPeerWF
                () => {
                   foreach (var client in _server.clients)
                   {
-                     client.SendRequest("join " + parameters);
+                     client.Value.SendRequest("join " + parameters);
                   }
                }
             );
