@@ -17,6 +17,7 @@ namespace PeerToPeer
       private IPEndPoint _remoteEP;
       private Socket _sender;
       private int _clientPort;
+      public int ChordID { get; set; } = 1;
 
       public PeerClient()
       {

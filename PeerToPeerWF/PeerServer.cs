@@ -28,6 +28,10 @@ namespace PeerToPeer
 
       // ChordID used to mark position in chord, default to 1 for initial chord, updated based on port number in constructor
       public int ChordID { get; set; } = 1;
+      public int PredecessorID { get; set; } = 1;
+      public int SuccessorID { get; set; } = 1;
+      public int PredecessorPortNumber { get; set; } = 1;
+      public int SuccessorPortNumber { get; set; } = 1;
 
       public int BackLog { get; set; } = 10;
 
@@ -45,6 +49,12 @@ namespace PeerToPeer
          _numberOfConnections = 0;
          SetUpLocalEndPoint();
          ChordID = portNumber == 11000 ? 1 : hashPortToNodeID(portNumber);
+         // Initializes PredecessorID/PortNumber and SuccessorID/PortNumber to ChordID/PortNumber
+         //(this will be correct if we're the intial node, otherwise will be updated when joining the chord)
+         PredecessorID = ChordID;
+         PredecessorPortNumber = _portNumber;
+         SuccessorID = ChordID;
+         SuccessorID = _portNumber;
       }
 
       private int hashPortToNodeID(int portNumber)
@@ -139,11 +149,14 @@ namespace PeerToPeer
       public void HandleMessage(string message)
       {
          string[] parameters = message.Split(' ');
-
+         ReportMessage("Inside HandleMessage w/command: " + parameters[0]);
          switch(parameters[0])
          {
             case "join":
-               HandleJoin(parameters);
+               HandleJoin(parameters[1].Split(':'));
+               break;
+            case "joinresponse":
+               HandleJoinResponse(parameters);
                break;
             default:
                break;
@@ -152,8 +165,43 @@ namespace PeerToPeer
 
       public void HandleJoin(string[] parameters)
       {
+         int joiningID = Int32.Parse(parameters[0]);
+         int joiningPortNumber = Int32.Parse(parameters[1]);
          ReportMessage("Inside HandleJoin" + parameters[0] + parameters[1]);
+
+         // If we are the only node in the chord, or if joining nodeID falls between ours and our Successor, we want to insert the node after us
+         if(PredecessorID == SuccessorID || (joiningID > ChordID && joiningID < SuccessorID))
+         {
+            // First, create a new client instance for the joining node, so we can respond
+            var client = AddClient(joiningID, joiningPortNumber);
+
+            Task.Factory.StartNew(
+               () => {
+                     // Send a joinresponse with the ChordID:PortNumber of predecessor and successor to join
+                     client.SendRequest("joinresponse " + ChordID + ":" + _portNumber + " " + SuccessorID + ":" + SuccessorPortNumber);
+                  // Finally, set our Successor to the newly joining node
+                  SuccessorID = joiningID;
+                  SuccessorPortNumber = joiningPortNumber;
+               }
+            );
+         }
       }
+
+      public void HandleJoinResponse(string[] parameters)
+      {
+         ReportMessage("Inside HandleJoinResponse " + parameters[0]);
+      }
+
+      public PeerClient AddClient(int nodeID, int portNumber)
+      {
+         var client = new PeerClient();
+         clients.Add(client);
+         client.SetUpRemoteEndPoint(IPAddress, portNumber);
+         client.ConnectToRemoteEndPoint();
+         client.ChordID = nodeID;
+
+         return client;
+      } 
 
       public IDisposable Subscribe(IObserver<string> observer)
       {

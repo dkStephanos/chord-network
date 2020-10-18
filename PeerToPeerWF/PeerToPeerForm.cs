@@ -87,12 +87,14 @@ namespace PeerToPeerWF
 
         private void ProcessConnect(string parameters)
         {
-            int port = Int32.Parse(parameters);
+            int nodeID = Int32.Parse(parameters.Split(':')[0]);
+            int port = Int32.Parse(parameters.Split(':')[1]);
             var client = new PeerClient();
             _server.clients.Add(client);
             client.Subscribe(new StringObserver(txtMain));
             client.SetUpRemoteEndPoint(_server.IPAddress, port);
             client.ConnectToRemoteEndPoint();
+            client.ChordID = nodeID;
             Task.Factory.StartNew(
             () => client.ReceiveResponse()
          );
