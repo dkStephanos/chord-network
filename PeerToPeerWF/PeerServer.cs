@@ -54,7 +54,7 @@ namespace PeerToPeer
          PredecessorID = ChordID;
          PredecessorPortNumber = _portNumber;
          SuccessorID = ChordID;
-         SuccessorID = _portNumber;
+         SuccessorPortNumber = _portNumber;
       }
 
       private int hashPortToNodeID(int portNumber)
@@ -167,7 +167,6 @@ namespace PeerToPeer
       {
          int joiningID = Int32.Parse(parameters[0]);
          int joiningPortNumber = Int32.Parse(parameters[1]);
-         ReportMessage("Inside HandleJoin" + parameters[0] + parameters[1]);
 
          // If we are the only node in the chord, or if joining nodeID falls between ours and our Successor, we want to insert the node after us
          if(PredecessorID == SuccessorID || (joiningID > ChordID && joiningID < SuccessorID))
@@ -184,12 +183,46 @@ namespace PeerToPeer
                   SuccessorPortNumber = joiningPortNumber;
                }
             );
+
+            // Finally, report a message so we can see we inserted a node into the chord
+            ReportMessage("Added Node " + joiningID + " to the chord at port: " + joiningPortNumber);
+
+         } else // Else, we forward the join message to our successor
+         {
+            // Loop through our clients, until we get our successor
+            foreach(PeerClient client in clients)
+            {
+               // Once we find it, forward the join request, report a status message, and break out of the loop
+               if (client.ChordID == SuccessorID)
+               {
+                  client.SendRequest("join " + joiningID + ":" + joiningPortNumber);
+                  ReportMessage("Forwarded join request to node: " + SuccessorID);
+                  break;
+               }
+            }
          }
       }
 
       public void HandleJoinResponse(string[] parameters)
       {
-         ReportMessage("Inside HandleJoinResponse " + parameters[0]);
+         string[] predeccesorNodeData = parameters[1].Split(':');
+         string[] successorNodeData = parameters[2].Split(':');
+
+         PredecessorID = Int32.Parse(predeccesorNodeData[0]);
+         PredecessorPortNumber = Int32.Parse(predeccesorNodeData[1]);
+         SuccessorID = Int32.Parse(successorNodeData[0]);
+         SuccessorPortNumber = Int32.Parse(successorNodeData[1]);
+
+         // Don't add a new client if our predecessor is the node we asked to join (which will be the only node in our clients bag)
+         PeerClient client;
+         clients.TryPeek(out client);
+         if (client.ChordID != PredecessorID) AddClient(PredecessorID, PredecessorPortNumber);
+
+         // Don't double add the client if our predeccessor and successor are currently the same node
+         if (PredecessorID != SuccessorID) AddClient(SuccessorID, SuccessorPortNumber);
+
+         // Finally, report a success message with our predecessor and successor data to confirm Chord joined
+         ReportMessage("Node " + ChordID + " joined Chord. Predecessor: " + PredecessorID + ", Successor: " + SuccessorID);
       }
 
       public PeerClient AddClient(int nodeID, int portNumber)
