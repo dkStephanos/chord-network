@@ -73,6 +73,16 @@ namespace PeerToPeer
          return ChordID + ':' + _portNumber.ToString();
       }
 
+      public string GetPredecessorInfo()
+      {
+         return PredecessorID + ':' + PredecessorPortNumber.ToString();
+      }
+
+      public string GetSuccessorInfo()
+      {
+         return SuccessorID + ':' + SuccessorPortNumber.ToString();
+      }
+
       public void ReportServerInfo()
       {
          ReportMessage("Server Info: " + ChordID + ':' + _portNumber.ToString());
@@ -105,6 +115,34 @@ namespace PeerToPeer
          _autoResetEvent.Set();
       }
 
+      public PeerClient AddClient(int nodeID, int portNumber)
+      {
+         var client = new PeerClient();
+         clients.Add(client);
+         client.SetUpRemoteEndPoint(IPAddress, portNumber);
+         client.ConnectToRemoteEndPoint();
+         client.ChordID = nodeID;
+
+         return client;
+      }
+
+      public IDisposable Subscribe(IObserver<string> observer)
+      {
+         if (!_observers.Contains(observer))
+            _observers.Add(observer);
+
+         return new MessageUnsubscriber(_observers, observer);
+      }
+
+      public void ReportMessage(string message)
+      {
+         foreach (var observer in _observers)
+         {
+            observer.OnNext(message);
+         }
+      }
+
+      // Handles incoming requests to server using a buffer to handle bursts, parsing requests and passing off to HandleMessage
       private void HandleRequest(Socket handler)
       {
          Interlocked.Increment(ref _numberOfConnections);
@@ -146,10 +184,11 @@ namespace PeerToPeer
          handler.Close();
       }
 
+      // Interprets message request types and passes them off to the corresponding handler
       public void HandleMessage(string message)
       {
          string[] parameters = message.Split(' ');
-         ReportMessage("Inside HandleMessage w/command: " + parameters[0]);
+         
          switch(parameters[0])
          {
             case "join":
@@ -224,32 +263,5 @@ namespace PeerToPeer
          // Finally, report a success message with our predecessor and successor data to confirm Chord joined
          ReportMessage("Node " + ChordID + " joined Chord. Predecessor: " + PredecessorID + ", Successor: " + SuccessorID);
       }
-
-      public PeerClient AddClient(int nodeID, int portNumber)
-      {
-         var client = new PeerClient();
-         clients.Add(client);
-         client.SetUpRemoteEndPoint(IPAddress, portNumber);
-         client.ConnectToRemoteEndPoint();
-         client.ChordID = nodeID;
-
-         return client;
-      } 
-
-      public IDisposable Subscribe(IObserver<string> observer)
-      {
-         if (!_observers.Contains(observer))
-            _observers.Add(observer);
-
-         return new MessageUnsubscriber(_observers, observer);
-      }
-
-      public void ReportMessage(string message)
-      {
-         foreach(var observer in _observers)
-         {
-            observer.OnNext(message);
-         }
-      }
-   }
+    }
 }
