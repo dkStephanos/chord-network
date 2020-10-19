@@ -21,7 +21,7 @@ namespace PeerToPeer
       private Socket _listener;
       private int _numberOfConnections;
       private ConcurrentQueue<string> _messages;
-      private ChordNode node;
+      public ChordNode node;
        
       public int NumberOfConnections { get { return _numberOfConnections; } }
       
@@ -184,6 +184,12 @@ namespace PeerToPeer
             case "joinresponse":
                HandleJoinResponse(parameters);
                break;
+            case "leaverequest":
+               HandleLeaveRequest(parameters);
+               break;
+            case "leaveresponse":
+               HandleLeaveResponse(parameters);
+               break;
             default:
                break;
          }
@@ -202,9 +208,14 @@ namespace PeerToPeer
 
             Task.Factory.StartNew(
                () => {
-                     // Send a joinresponse with the ChordID:PortNumber of predecessor and successor to join
-                     client.SendRequest("joinresponse " + node.ChordID + ":" + _portNumber + " " + node.SuccessorID + ":" + node.SuccessorPortNumber);
-                  // Finally, set our Successor to the newly joining node
+                  // Send a joinresponse with the ChordID:PortNumber of predecessor and successor to join
+                  client.SendRequest("joinresponse " + node.ChordID + ":" + _portNumber + " " + node.SuccessorID + ":" + node.SuccessorPortNumber);
+                  // Finally, set our Successor to the newly joining node (and our Predecessor if we were the only node)
+                  if(node.PredecessorID == node.ChordID)
+                  {
+                     node.PredecessorID = joiningID;
+                     node.PredecessorPortNumber = joiningPortNumber;
+                  }
                   node.SuccessorID = joiningID;
                   node.SuccessorPortNumber = joiningPortNumber;
                }
@@ -247,5 +258,33 @@ namespace PeerToPeer
          // Finally, report a success message with our predecessor and successor data to confirm Chord joined
          ReportMessage("Node " + node.ChordID + " joined Chord. Predecessor: " + node.PredecessorID + ", Successor: " + node.SuccessorID);
       }
-    }
-}
+
+      public void HandleLeave()
+      {
+         // To initiate leaving the chord, we alert our successor we are leaving, who its new predecessor is (ours) and transfer our resources
+         Task.Factory.StartNew(
+               () => {
+                  clients[node.SuccessorID].SendRequest("leaverequest " + node.PredecessorID + ":" + node.PredecessorPortNumber);
+               }
+            );
+      }
+
+      public void HandleLeaveRequest(string[] parameters)
+      {
+         string[] newPredecessor = parameters[1].Split(':');
+
+         ReportMessage("Predecessor " + node.PredecessorID + " is leaving the chord. Setting " + newPredecessor[0] + " as new predecessor.");
+         
+         // Set new predecessor, initiate a connection if we dont' already have one, and tell it we are its new successor (unless we're now the last node)
+         
+      }
+
+      public void HandleLeaveResponse(string[] parameters)
+      {
+         ReportMessage("Leaving Chord. Nodes " + node.PredecessorID + " and " + node.SuccessorID + " are now linked.");
+         
+         // Code to disconnect all socket connections
+      }
+
+   } // end namespace
+} // end server class

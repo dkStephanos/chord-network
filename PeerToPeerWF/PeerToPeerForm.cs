@@ -52,7 +52,8 @@ namespace PeerToPeerWF
       {
          var length = command.Length;
          var index = command.IndexOf(' ');
-         var cmd = command.Substring(0, index).ToLower();
+         var cmd = command; 
+         if(index != -1) cmd = command.Substring(0, index).ToLower();
          var parameters = command[(index+1)..length];
          
          switch (cmd)
@@ -68,6 +69,9 @@ namespace PeerToPeerWF
                break;
             case "join":
                ProcessJoin(parameters);
+               break;
+            case "exit":
+               ProcessExit();
                break;
          }       
       }
@@ -123,5 +127,16 @@ namespace PeerToPeerWF
                }
             );
       }
-    }
+
+      private void ProcessExit()
+      {
+         Task.Factory.StartNew(
+               () => {
+                  // To initiate leaving the chord, we alert our successor we are leaving, who its new predecessor is (ours)
+                  // and transfer our resources
+                  _server.clients[_server.node.SuccessorID].SendRequest("leaverequest " + _server.node.PredecessorID + ":" + _server.node.PredecessorPortNumber);
+               }
+            );
+      }
+   }
 }
