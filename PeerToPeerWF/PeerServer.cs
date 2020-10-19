@@ -299,7 +299,7 @@ namespace PeerToPeer
          {
             Task.Factory.StartNew(
                () => {
-                  client.SendRequest("updatesuccesor " + node.ChordID + ":" + node.PortNumber);
+                  client.SendRequest("updatesuccessor " + node.ChordID + ":" + node.PortNumber);
                }
             );
          }
