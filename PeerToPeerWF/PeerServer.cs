@@ -127,6 +127,16 @@ namespace PeerToPeer
          }
       }
 
+      public void DisconnectAllClients()
+      {
+         foreach (var client in clients)
+         {
+            client.Value.Disconnect();
+         }
+
+         clients.Clear();
+      }
+
       public IDisposable Subscribe(IObserver<string> observer)
       {
          if (!_observers.Contains(observer))
@@ -203,9 +213,6 @@ namespace PeerToPeer
                break;
             case "leaveresponse":
                HandleLeaveResponse(parameters);
-               break;
-            case "updatepredecessor":
-               HandleUpdatePredecessor(parameters);
                break;
             case "updatesuccessor":
                HandleUpdateSuccessor(parameters);
@@ -307,29 +314,20 @@ namespace PeerToPeer
       
       public void HandleLeaveResponse(string[] parameters)
       {
-         ReportMessage("Leaving Chord. Nodes " + node.PredecessorID + " and " + node.SuccessorID + " are now linked.");
-         
-         // Code to disconnect all socket connections
-      }
-
-      public void HandleUpdatePredecessor(string[] parameters)
-      {
-         string[] newPredecessor = parameters[1].Split(':');
-
-         ReportMessage("Updating Predecessor to " + newPredecessor[0]);
-
-         // Set new predecessor
-         node.PredecessorID = Int32.Parse(newPredecessor[0]);
-         node.PredecessorPortNumber = Int32.Parse(newPredecessor[1]);
-
-         // initiate a connection if we dont' already have one,
-         AddClient(node.PredecessorID, node.PredecessorPortNumber);
+         // If our leave was successful, report a final message, and shutdown all our connections
+         if (parameters[1] == "success")
+         {
+            ReportMessage("Leaving Chord. Nodes " + node.PredecessorID + " and " + node.SuccessorID + " are now linked.");
+            DisconnectAllClients();
+         }
       }
 
       public void HandleUpdateSuccessor(string[] parameters)
       {
          string[] newSuccessor = parameters[1].Split(':');
 
+         // Save the odl successorID so we can confirm the change and report that we are updating
+         int oldSuccessorID = node.SuccessorID;
          ReportMessage("Updating Successor to " + newSuccessor[0]);
 
          // Set new Successor
@@ -338,6 +336,9 @@ namespace PeerToPeer
 
          // initiate a connection if we dont' already have one,
          AddClient(node.SuccessorID, node.SuccessorPortNumber);
+
+         // finally, if we are getting an updatesuccessor method, our previous successor triggered a leave, so send the leaveresponse message
+         clients[oldSuccessorID].SendRequest("leaveresponse success");
       }
 
    } // end namespace
