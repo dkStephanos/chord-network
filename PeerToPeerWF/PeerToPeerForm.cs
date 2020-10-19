@@ -73,6 +73,9 @@ namespace PeerToPeerWF
             case "exit":
                ProcessExit();
                break;
+            case "info":
+               ProcessInfo();
+               break;
          }       
       }
 
@@ -137,6 +140,12 @@ namespace PeerToPeerWF
                   _server.clients[_server.node.SuccessorID].SendRequest("leaverequest " + _server.node.PredecessorID + ":" + _server.node.PredecessorPortNumber);
                }
             );
+      }
+
+      private void ProcessInfo()
+      {
+         _server.ReportServerInfo();
+         _server.ReportNodeInfo();
       }
    }
 }
