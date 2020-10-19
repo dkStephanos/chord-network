@@ -22,6 +22,7 @@ namespace PeerToPeerWF
       {
          InitializeComponent();
          _serverResetEvent = new AutoResetEvent(false);
+         this.ActiveControl = commandBox;
       }
 
       private void PeerToPeerForm_Load(object sender, EventArgs e)
@@ -73,8 +74,11 @@ namespace PeerToPeerWF
             case "exit":
                ProcessExit();
                break;
-            case "info":
-               ProcessInfo();
+            case "nodeinfo":
+               ProcessNodeInfo();
+               break;
+            case "showresources":
+               ProcessShowResources();
                break;
          }       
       }
@@ -142,10 +146,15 @@ namespace PeerToPeerWF
             );
       }
 
-      private void ProcessInfo()
+      private void ProcessNodeInfo()
       {
          _server.ReportServerInfo();
          _server.ReportNodeInfo();
+      }
+
+      private void ProcessShowResources()
+      {
+         _server.ReportResources();
       }
    }
 }
