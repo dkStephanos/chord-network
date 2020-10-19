@@ -69,6 +69,11 @@ namespace PeerToPeer
          ReportMessage("Successor: " + node.SuccessorID + ':' + node.SuccessorPortNumber);
       }
 
+      public void ReportResources()
+      {
+         ReportMessage(node.listResources());
+      }
+
       private void SetUpLocalEndPoint()
       {
          _ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
