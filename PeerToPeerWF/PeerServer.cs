@@ -204,7 +204,12 @@ namespace PeerToPeer
             case "leaveresponse":
                HandleLeaveResponse(parameters);
                break;
-
+            case "updatepredecessor":
+               HandleUpdatePredecessor(parameters);
+               break;
+            case "updatesuccessor":
+               HandleUpdateSuccessor(parameters);
+               break;
             default:
                break;
          }
@@ -305,6 +310,34 @@ namespace PeerToPeer
          ReportMessage("Leaving Chord. Nodes " + node.PredecessorID + " and " + node.SuccessorID + " are now linked.");
          
          // Code to disconnect all socket connections
+      }
+
+      public void HandleUpdatePredecessor(string[] parameters)
+      {
+         string[] newPredecessor = parameters[1].Split(':');
+
+         ReportMessage("Updating Predecessor to " + newPredecessor[0]);
+
+         // Set new predecessor
+         node.PredecessorID = Int32.Parse(newPredecessor[0]);
+         node.PredecessorPortNumber = Int32.Parse(newPredecessor[1]);
+
+         // initiate a connection if we dont' already have one,
+         AddClient(node.PredecessorID, node.PredecessorPortNumber);
+      }
+
+      public void HandleUpdateSuccessor(string[] parameters)
+      {
+         string[] newSuccessor = parameters[1].Split(':');
+
+         ReportMessage("Updating Successor to " + newSuccessor[0]);
+
+         // Set new Successor
+         node.SuccessorID = Int32.Parse(newSuccessor[0]);
+         node.SuccessorPortNumber = Int32.Parse(newSuccessor[1]);
+
+         // initiate a connection if we dont' already have one,
+         AddClient(node.SuccessorID, node.SuccessorPortNumber);
       }
 
    } // end namespace
