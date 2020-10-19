@@ -205,9 +205,11 @@ namespace PeerToPeer
       {
          int joiningID = Int32.Parse(parameters[0]);
          int joiningPortNumber = Int32.Parse(parameters[1]);
+         bool isOurSuccessor = node.isSuccessor(joiningID);
 
-         // If we are the only node in the chord, or if joining nodeID falls between ours and our Successor, we want to insert the node after us
-         if(node.PredecessorID == node.SuccessorID || (joiningID > node.ChordID && joiningID < node.SuccessorID))
+
+         // If the joining node is our successor, proccess the join
+         if(isOurSuccessor)
          {
             // First, create a new client instance for the joining node, so we can respond
             var client = AddClient(joiningID, joiningPortNumber);

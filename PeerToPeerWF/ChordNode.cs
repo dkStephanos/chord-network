@@ -37,5 +37,20 @@ namespace ChordNodeServer
             return Math.Abs(BitConverter.ToInt32(sha256.ComputeHash(Encoding.UTF8.GetBytes(portNumber.ToString())), 0)) % 98 + 2;
          }
       }
+
+      public bool isSuccessor(int nodeID)
+      {
+         bool isOurSuccessor = false;        // We need to determine if the joining node should be inserted after us, assume false to start
+         int offsetSuccessorID = SuccessorID + 100;
+
+         // If we are the only node in the chord, insert node after us
+         if (PredecessorID == ChordID) isOurSuccessor = true;
+         // If the joining nodeID is greater than our, but less than our successor, insert node after us
+         if (nodeID > ChordID && nodeID < SuccessorID) isOurSuccessor = true;
+         // Finally, if our successorID is less than our own, the above check will fail, so check if nodeID falls between ours and our successor + 100
+         if (ChordID > SuccessorID && (nodeID > ChordID && nodeID < offsetSuccessorID)) isOurSuccessor = true;
+
+         return isOurSuccessor;
+      }
    }
 }
