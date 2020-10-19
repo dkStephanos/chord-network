@@ -99,11 +99,19 @@ namespace PeerToPeer
       public PeerClient AddClient(int nodeID, int portNumber)
       {
          var client = new PeerClient();
-         clients.TryAdd(nodeID, client);
-         client.SetUpRemoteEndPoint(IPAddress, portNumber);
-         client.ConnectToRemoteEndPoint();
-         client.ChordID = nodeID;
 
+         // Only AddClient if a connection doesn't exist and the requested nodeID isn't our own
+         if (nodeID != node.ChordID && !clients.ContainsKey(nodeID))
+         {
+            clients.TryAdd(nodeID, client);
+            client.SetUpRemoteEndPoint(IPAddress, portNumber);
+            client.ConnectToRemoteEndPoint();
+            client.ChordID = nodeID;
+         } else if(clients.ContainsKey(nodeID))    // If we do already have a connection, set that client to return
+         {
+            client = clients[nodeID];
+         }
+         
          return client;
       }
 
@@ -196,6 +204,7 @@ namespace PeerToPeer
             case "leaveresponse":
                HandleLeaveResponse(parameters);
                break;
+
             default:
                break;
          }
@@ -278,22 +287,19 @@ namespace PeerToPeer
          node.PredecessorPortNumber = Int32.Parse(newPredecessor[1]);
 
          // initiate a connection if we dont' already have one,
-         if (node.PredecessorID != node.ChordID && !clients.ContainsKey(node.PredecessorID))
-         {
-            AddClient(node.PredecessorID, node.PredecessorPortNumber);
+         PeerClient client = AddClient(node.PredecessorID, node.PredecessorPortNumber);
 
-            // Tell it we are its new successor(unless we're now the last node)
-            if (node.PredecessorID != node.ChordID)
-            {
-               Task.Factory.StartNew(
-                 () => {
-                    clients[node.PredecessorID].SendRequest("updatesuccesor " + node.ChordID + ":" + node.PortNumber);
-                 }
-              );
-            }
+         // Tell it we are its new successor(unless we're now the last node)
+         if (node.PredecessorID != node.ChordID)
+         {
+            Task.Factory.StartNew(
+               () => {
+                  client.SendRequest("updatesuccesor " + node.ChordID + ":" + node.PortNumber);
+               }
+            );
          }
       }
-
+      
       public void HandleLeaveResponse(string[] parameters)
       {
          ReportMessage("Leaving Chord. Nodes " + node.PredecessorID + " and " + node.SuccessorID + " are now linked.");
