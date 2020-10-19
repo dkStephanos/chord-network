@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ChordNodeServer
 {
-   class ChordNode
+   public class ChordNode
    {
       // ChordID used to mark position in chord, default to 1 for initial chord, updated based on port number in constructor
       public int ChordID { get; set; } = 1;
