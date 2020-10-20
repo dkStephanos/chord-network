@@ -134,20 +134,34 @@ namespace ChordNodeServer
          sortResources();
       }
 
-      // Takes a nodeID, removes any resource with a key <= nodeID from the resources collection, and returns the split resource list
+      // Takes a nodeID, removes any resource that belongs to the passed nodeID from the resources collection, and returns the split resource list
       public List<KeyValuePair<int, ChordResource>> splitResources(int nodeID)
       {
          List<KeyValuePair<int, ChordResource>> splitResourceList = new List<KeyValuePair<int, ChordResource>>();
 
-         foreach(KeyValuePair<int, ChordResource> resource in resources)
+         if(nodeID > ChordID)
          {
-            if (resource.Key <= nodeID && resource.Key > ChordID)
+            foreach (KeyValuePair<int, ChordResource> resource in resources)
             {
-               splitResourceList.Add(resource);
+               if (resource.Key <= nodeID && resource.Key > ChordID)
+               {
+                  splitResourceList.Add(resource);
+               }
             }
-         }
 
-         resources.RemoveAll(resource => resource.Key <= nodeID && resource.Key > ChordID);
+            resources.RemoveAll(resource => resource.Key <= nodeID && resource.Key > ChordID);
+         } else
+         {
+            foreach (KeyValuePair<int, ChordResource> resource in resources)
+            {
+               if (resource.Key <= nodeID)
+               {
+                  splitResourceList.Add(resource);
+               }
+            }
+
+            resources.RemoveAll(resource => resource.Key <= nodeID);
+         }
 
          return splitResourceList;
       }

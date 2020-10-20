@@ -219,6 +219,9 @@ namespace PeerToPeer
             case "leaveresponse":
                HandleLeaveResponse(parameters);
                break;
+            case "updatepredecessor":
+               HandleUpdatePredecessor(parameters);
+               break;
             case "updatesuccessor":
                HandleUpdateSuccessor(parameters);
                break;
@@ -283,8 +286,8 @@ namespace PeerToPeer
          node.SuccessorID = Int32.Parse(successorNodeData[0]);
          node.SuccessorPortNumber = Int32.Parse(successorNodeData[1]);
 
-         // Unmarshal the resources attatched to joinresponse message and add them to the node
-         node.resources.AddRange(node.unmarshalResources(parameters[3]));
+         // Unmarshal the resources attatched to joinresponse message and add them to the node (if they exist)
+         if(parameters[3] != "None") node.addResources(node.unmarshalResources(parameters[3]));
 
          // Don't add a new client if our predecessor is the node we asked to join (which will be the only node in our clients bag)
          foreach(var client in clients)
@@ -294,7 +297,14 @@ namespace PeerToPeer
             // Don't double add the client if our predeccessor and successor are currently the same node
             if (node.PredecessorID != node.SuccessorID) AddClient(node.SuccessorID, node.SuccessorPortNumber);
          }
-         
+
+         // Send an updatepredecessor msg to our successor so we can get our resources
+         Task.Factory.StartNew(
+            () => {
+               clients[node.SuccessorID].SendRequest("updatepredecessor " + node.ChordID + ":" + node.PortNumber);
+            }
+         );
+
          // Finally, report a success message with our predecessor and successor data to confirm Chord joined
          ReportMessage("Node " + node.ChordID + " joined Chord. Predecessor: " + node.PredecessorID + ", Successor: " + node.SuccessorID);
       }
@@ -333,6 +343,32 @@ namespace PeerToPeer
          {
             ReportMessage("Leaving Chord. Nodes " + node.PredecessorID + " and " + node.SuccessorID + " are now linked.");
             DisconnectAllClients();
+         }
+      }
+      public void HandleUpdatePredecessor(string[] parameters)
+      {
+         string[] newPredecessor = parameters[1].Split(':');
+         ReportMessage("Inside HandleUpdatePRedecessor");
+
+         // If our predecessor is already correct, don't do anything, else set it, open the connection and split our resources, sending them to our predecessor
+         if(node.PredecessorID != Int32.Parse(newPredecessor[0]))
+         {
+            // Save the odl PredecessorID so we can confirm the change and report that we are updating
+            int oldPredecessorID = node.PredecessorID;
+            ReportMessage("Updating Predecessor to " + newPredecessor[0]);
+
+            // Set new Predecessor
+            node.PredecessorID = Int32.Parse(newPredecessor[0]);
+            node.PredecessorPortNumber = Int32.Parse(newPredecessor[1]);
+
+            // initiate a connection if we dont' already have one,
+            AddClient(node.PredecessorID, node.PredecessorPortNumber);
+
+            // Split our resources that are being sent to the predecessor, and marshal them for transport
+            string splitResources = node.marshalResources(node.splitResources(node.PredecessorID));
+
+            // finally, if we are getting an updatePredecessor method, our new Predecessor needs resources, so send an updateresources msg with the split resources
+            clients[node.PredecessorID].SendRequest("updateresources " + splitResources);
          }
       }
 
