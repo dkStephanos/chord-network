@@ -240,10 +240,13 @@ namespace PeerToPeer
             // First, create a new client instance for the joining node, so we can respond
             var client = AddClient(joiningID, joiningPortNumber);
 
+            // Then split our resources that will belong to the joining node
+            string resourcesToSend = node.marshalResources(node.splitResources(joiningID));
+
             Task.Factory.StartNew(
                () => {
                   // Send a joinresponse with the ChordID:PortNumber of predecessor and successor to join
-                  client.SendRequest("joinresponse " + node.ChordID + ":" + _portNumber + " " + node.SuccessorID + ":" + node.SuccessorPortNumber);
+                  client.SendRequest("joinresponse " + node.ChordID + ":" + _portNumber + " " + node.SuccessorID + ":" + node.SuccessorPortNumber + " " + resourcesToSend);
                   // Finally, set our Successor to the newly joining node (and our Predecessor if we were the only node)
                   if(node.PredecessorID == node.ChordID)
                   {
@@ -280,6 +283,9 @@ namespace PeerToPeer
          node.SuccessorID = Int32.Parse(successorNodeData[0]);
          node.SuccessorPortNumber = Int32.Parse(successorNodeData[1]);
 
+         // Unmarshal the resources attatched to joinresponse message and add them to the node
+         node.resources.AddRange(node.unmarshalResources(parameters[3]));
+
          // Don't add a new client if our predecessor is the node we asked to join (which will be the only node in our clients bag)
          foreach(var client in clients)
          {
@@ -302,6 +308,9 @@ namespace PeerToPeer
          // Set new predecessor
          node.PredecessorID = Int32.Parse(newPredecessor[0]);
          node.PredecessorPortNumber = Int32.Parse(newPredecessor[1]);
+
+         //Unmarshal and append the resources from the leaving node (parameters[2]) to our own
+         node.addResources(node.unmarshalResources(parameters[2]));
 
          // initiate a connection if we dont' already have one,
          PeerClient client = AddClient(node.PredecessorID, node.PredecessorPortNumber);

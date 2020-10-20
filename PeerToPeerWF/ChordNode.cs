@@ -141,12 +141,13 @@ namespace ChordNodeServer
 
          foreach(KeyValuePair<int, ChordResource> resource in resources)
          {
-            if (resource.Key <= nodeID)
+            if (resource.Key <= nodeID && resource.Key > ChordID)
             {
                splitResourceList.Add(resource);
-               resources.Remove(resource);
             }
          }
+
+         resources.RemoveAll(resource => resource.Key <= nodeID && resource.Key > ChordID);
 
          return splitResourceList;
       }
