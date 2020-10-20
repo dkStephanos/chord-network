@@ -15,7 +15,7 @@ namespace ChordNodeServer
       public int PredecessorPortNumber { get; set; } = 1;
       public int SuccessorPortNumber { get; set; } = 1;
 
-      public Dictionary<int, ChordResource> resources;
+      public List<KeyValuePair<int, ChordResource>> resources;
 
       public ChordNode(int portNumber)
       {
@@ -27,13 +27,13 @@ namespace ChordNodeServer
          PredecessorPortNumber = portNumber;
          SuccessorID = ChordID;
          SuccessorPortNumber = portNumber;
-         resources = new Dictionary<int, ChordResource>();
+         resources = new List<KeyValuePair<int, ChordResource>>();
          // If we're the starter node, initialize a dummy list of resources to demonstrate resource mgmt inside the chord
          if(ChordID == 1)
          {
             for(int i = 1; i < 101; i++)
             {
-               resources.Add(i, new ChordResource(i, "File" + i + ".txt"));
+               resources.Add(new KeyValuePair<int, ChordResource>(i, new ChordResource(i, "File" + i + ".txt")));
             }
          }
       }
@@ -69,15 +69,16 @@ namespace ChordNodeServer
          string resourceList = "Node resources:\n";
 
          // If there are resources, append them to the output string, otherwise, append "None"
-         if(resources.Count > 0)
+         if (resources.Count > 0)
          {
             foreach (var resource in resources)
             {
                resourceList += "Key " + resource.Key + ") " + resource.Value.FilePath + "\n";
             }
-         } else
+         }
+         else
          {
-            resourceList += "None"; 
+            resourceList += "None";
          }
 
          return resourceList;
