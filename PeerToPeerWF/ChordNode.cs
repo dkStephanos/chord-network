@@ -83,5 +83,14 @@ namespace ChordNodeServer
 
          return resourceList;
       }
+
+      public void sortResources()
+      {
+         // Sort resource list by key value (small-> large)
+         resources.Sort(delegate (KeyValuePair<int, ChordResource> x, KeyValuePair<int, ChordResource> y)
+         {
+            return x.Key.CompareTo(y.Key);
+         });
+      }
    }
 }
