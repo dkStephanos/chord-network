@@ -182,7 +182,7 @@ namespace PeerToPeer
             while (_messages.Count > 0)
             {
                _messages.TryDequeue(out request);
-               ReportMessage($"RECEIVED:{request}");
+               ReportMessage($"RECEIVED: {request}");
                if (request == "Exit")
                {
                   shutdown = true;
@@ -318,6 +318,9 @@ namespace PeerToPeer
 
          ReportMessage("Predecessor " + node.PredecessorID + " is leaving the chord. Setting " + newPredecessor[0] + " as new predecessor.");
 
+         // store our old predecessorID so we can send the confirm message
+         int leavingNodeID = node.PredecessorID;
+
          // Set new predecessor
          node.PredecessorID = Int32.Parse(newPredecessor[0]);
          node.PredecessorPortNumber = Int32.Parse(newPredecessor[1]);
@@ -337,6 +340,13 @@ namespace PeerToPeer
                }
             );
          }
+
+         // Finally, send the confirm message so the leavingnode knows to disconnect
+         Task.Factory.StartNew(
+               () => {
+                  clients[leavingNodeID].SendRequest("leaveresponse success");
+               }
+            );
       }
       
       public void HandleLeaveResponse(string[] parameters)

@@ -141,7 +141,7 @@ namespace PeerToPeerWF
                () => {
                   // To initiate leaving the chord, we alert our successor we are leaving, who its new predecessor is (ours)
                   // and transfer our resources
-                  _server.clients[_server.node.SuccessorID].SendRequest("leaverequest " + _server.node.PredecessorID + ":" + _server.node.PredecessorPortNumber);
+                  _server.clients[_server.node.SuccessorID].SendRequest("leaverequest " + _server.node.PredecessorID + ":" + _server.node.PredecessorPortNumber + " " + _server.node.marshalResources(_server.node.resources));
                }
             );
       }
