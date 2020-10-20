@@ -92,5 +92,21 @@ namespace ChordNodeServer
             return x.Key.CompareTo(y.Key);
          });
       }
+
+      // Converts a resource list to a string to be sent across the network
+      public string marshalResources(List<KeyValuePair<int, ChordResource>> resourceList)
+      {
+         // Initialize output string, just set to None if we get an empty list
+         string marshalledResources = resourceList.Count > 0 ? "" : "None";
+
+         foreach(KeyValuePair<int, ChordResource> resource in resourceList)
+         {
+            marshalledResources += resource.Value.ResourceKey + ":" + resource.Value.FilePath;
+            // If this isn't the last item in the list, also append a comma
+            marshalledResources += resource.Equals(resourceList[resourceList.Count - 1]) ? "" : ", ";
+         }
+
+         return marshalledResources;
+      }
    }
 }
