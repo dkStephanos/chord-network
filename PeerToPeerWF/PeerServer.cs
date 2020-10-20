@@ -225,6 +225,9 @@ namespace PeerToPeer
             case "updatesuccessor":
                HandleUpdateSuccessor(parameters);
                break;
+            case "updateresources":
+               HandleUpdateResources(parameters);
+               break;
             default:
                break;
          }
@@ -348,7 +351,6 @@ namespace PeerToPeer
       public void HandleUpdatePredecessor(string[] parameters)
       {
          string[] newPredecessor = parameters[1].Split(':');
-         ReportMessage("Inside HandleUpdatePRedecessor");
 
          // If our predecessor is already correct, don't do anything, else set it, open the connection and split our resources, sending them to our predecessor
          if(node.PredecessorID != Int32.Parse(newPredecessor[0]))
@@ -389,6 +391,13 @@ namespace PeerToPeer
 
          // finally, if we are getting an updatesuccessor method, our previous successor triggered a leave, so send the leaveresponse message
          clients[oldSuccessorID].SendRequest("leaveresponse success");
+      }
+
+      public void HandleUpdateResources(string[] parameters)
+      {
+         node.addResources(node.unmarshalResources(parameters[1]));
+
+         ReportMessage("Updated resources. Now responsible for " + node.resources.Count + " resources.");
       }
 
    } // end namespace
