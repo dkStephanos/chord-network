@@ -125,5 +125,14 @@ namespace ChordNodeServer
 
          return newResources;
       }
+
+      // Converts a resource list to a string to be sent across the network
+      public void addResources(List<KeyValuePair<int, ChordResource>> resourcesToAdd)
+      {
+         // Add the new resources to our collection, and sor the result
+         resources.AddRange(resourcesToAdd);
+         sortResources();
+      }
+
    } // end ChordNode
 }
