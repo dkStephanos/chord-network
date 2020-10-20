@@ -50,7 +50,7 @@ namespace PeerToPeer
 
       public void SendRequest(string request)
       {
-         ReportMessage($"SENDING:{request}");
+         ReportMessage($"SENDING: {request}");
          byte[] msg = Encoding.ASCII.GetBytes(request+"<EOF>");
          _sender.Send(msg);
       }
@@ -67,7 +67,7 @@ namespace PeerToPeer
          {
             int bytesRec = _sender.Receive(_bytes);
             response = Encoding.ASCII.GetString(_bytes, 0, bytesRec);
-            ReportMessage($"RECEIVED:{response}");
+            ReportMessage($"RECEIVED: {response}");
             } while (response != "Exit");
       }
 

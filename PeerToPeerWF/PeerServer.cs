@@ -163,7 +163,7 @@ namespace PeerToPeer
       {
          Interlocked.Increment(ref _numberOfConnections);
          ReportMessage($"Number of connections: {_numberOfConnections}");
-         byte[] buffer = new byte[1024];
+         byte[] buffer = new byte[1536];
          string data;
          string request;
          bool shutdown = false;
@@ -247,7 +247,7 @@ namespace PeerToPeer
             var client = AddClient(joiningID, joiningPortNumber);
 
             // Then split our resources that will belong to the joining node
-            string resourcesToSend = node.marshalResources(node.splitResources(joiningID));
+            string resourcesToSend = node.marshalResources(node.splitResources(joiningID, isOurSuccessor));
 
             Task.Factory.StartNew(
                () => {
@@ -324,6 +324,13 @@ namespace PeerToPeer
          // Set new predecessor
          node.PredecessorID = Int32.Parse(newPredecessor[0]);
          node.PredecessorPortNumber = Int32.Parse(newPredecessor[1]);
+  
+         // If we were the only two nodes in the chord, update our successor as well
+         if(leavingNodeID == node.SuccessorID)
+         {
+            node.SuccessorID = Int32.Parse(newPredecessor[0]);
+            node.SuccessorPortNumber = Int32.Parse(newPredecessor[1]);
+         }
 
          //Unmarshal and append the resources from the leaving node (parameters[2]) to our own
          node.addResources(node.unmarshalResources(parameters[2]));
@@ -345,6 +352,8 @@ namespace PeerToPeer
          Task.Factory.StartNew(
                () => {
                   clients[leavingNodeID].SendRequest("leaveresponse success");
+                  // Finally, kill our connection to the client
+                  DisconnectClient(leavingNodeID);
                }
             );
       }
@@ -356,6 +365,9 @@ namespace PeerToPeer
          {
             ReportMessage("Leaving Chord. Nodes " + node.PredecessorID + " and " + node.SuccessorID + " are now linked.");
             DisconnectAllClients();
+            _listener.Shutdown(SocketShutdown.Both);
+            _listener.Disconnect(true);
+            
          }
       }
       public void HandleUpdatePredecessor(string[] parameters)

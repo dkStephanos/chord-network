@@ -135,7 +135,8 @@ namespace ChordNodeServer
       }
 
       // Takes a nodeID, removes any resource that belongs to the passed nodeID from the resources collection, and returns the split resource list
-      public List<KeyValuePair<int, ChordResource>> splitResources(int nodeID)
+      // Takes optional paramter, forSuccessor, so we can add resources that are greater than nodeID, but should be included (like resource 100 for node 1)
+      public List<KeyValuePair<int, ChordResource>> splitResources(int nodeID, bool forSuccessor = false)
       {
          List<KeyValuePair<int, ChordResource>> splitResourceList = new List<KeyValuePair<int, ChordResource>>();
 
@@ -161,6 +162,19 @@ namespace ChordNodeServer
             }
 
             resources.RemoveAll(resource => resource.Key <= nodeID);
+         }
+
+         if(forSuccessor)
+         {
+            foreach (KeyValuePair<int, ChordResource> resource in resources)
+            {
+               if (resource.Key > ChordID)
+               {
+                  splitResourceList.Add(resource);
+               }
+            }
+
+            resources.RemoveAll(resource => resource.Key > ChordID);
          }
 
          return splitResourceList;
