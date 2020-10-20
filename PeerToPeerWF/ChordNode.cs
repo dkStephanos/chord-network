@@ -103,10 +103,27 @@ namespace ChordNodeServer
          {
             marshalledResources += resource.Value.ResourceKey + ":" + resource.Value.FilePath;
             // If this isn't the last item in the list, also append a comma
-            marshalledResources += resource.Equals(resourceList[resourceList.Count - 1]) ? "" : ", ";
+            marshalledResources += resource.Equals(resourceList[resourceList.Count - 1]) ? "" : ",";
          }
 
          return marshalledResources;
       }
-   }
+
+      // Converts a resource list to a string to be sent across the network
+      public List<KeyValuePair<int, ChordResource>> unmarshalResources(string resourcesString)
+      {
+         // Initialize output string, just set to None if we get an empty list
+         List<KeyValuePair<int, ChordResource>> newResources = new List<KeyValuePair<int, ChordResource>>();
+         // Split resourceList by comma, getting an array of ResourceKey:FilePath strings
+         string[] resourceList = resourcesString.Split(',');
+
+         foreach (string resource in resourceList)
+         {
+            // Split the resource string by colon to get the key and filepath, create a new ChordResource out of them, and append to newResources
+            newResources.Add(new KeyValuePair<int, ChordResource>(Int32.Parse(resource.Split(':')[0]), new ChordResource(Int32.Parse(resource.Split(':')[0]), resource.Split(':')[1])));
+         }
+
+         return newResources;
+      }
+   } // end ChordNode
 }
