@@ -65,10 +65,16 @@ namespace PeerToPeer
          string response;
          do
          {
-            int bytesRec = _sender.Receive(_bytes);
-            response = Encoding.ASCII.GetString(_bytes, 0, bytesRec);
-            ReportMessage($"RECEIVED: {response}");
-            } while (response != "Exit");
+            try
+            {
+               int bytesRec = _sender.Receive(_bytes);
+               response = Encoding.ASCII.GetString(_bytes, 0, bytesRec);
+               ReportMessage($"RECEIVED: {response}");
+            } catch(Exception e)
+            {
+               response = "Exit";
+            }
+         } while (response != "Exit");
       }
 
       public IDisposable Subscribe(IObserver<string> observer)
