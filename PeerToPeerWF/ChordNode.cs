@@ -14,6 +14,7 @@ namespace ChordNodeServer
       public int SuccessorID { get; set; } = 1;
       public int PredecessorPortNumber { get; set; } = 1;
       public int SuccessorPortNumber { get; set; } = 1;
+      public Dictionary<int, int> FingerTable { get; set; } = new Dictionary<int, int>(6);
 
       public List<KeyValuePair<int, ChordResource>> resources;
 
@@ -35,6 +36,11 @@ namespace ChordNodeServer
             {
                resources.Add(new KeyValuePair<int, ChordResource>(i, new ChordResource(i, "File" + i + ".txt")));
             }
+         }
+         // Initialize the keys for the fingerTable, setting values to -1 (to be set later upon joining, and updated on a timer)
+         for(int j = 0; j < 6; j++)
+         {
+            FingerTable.Add(ChordID + (int)Math.Pow(2, j), -1);
          }
       }
 

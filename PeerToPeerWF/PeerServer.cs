@@ -69,6 +69,17 @@ namespace PeerToPeer
          ReportMessage("Successor: " + node.SuccessorID + ':' + node.SuccessorPortNumber);
       }
 
+      public void ReportFingerTable()
+      {
+         string fingerTableStr = "";
+         foreach(var entry in node.FingerTable)
+         {
+            fingerTableStr += "\nShortcut: " + entry.Key + ", NodeID: " + entry.Value;
+         }
+
+         ReportMessage("Finger Table:" + fingerTableStr);
+      }
+
       public void ReportResources()
       {
          ReportMessage(node.listResources());

@@ -150,6 +150,7 @@ namespace PeerToPeerWF
       {
          _server.ReportServerInfo();
          _server.ReportNodeInfo();
+         _server.ReportFingerTable();
       }
 
       private void ProcessShowResources()
