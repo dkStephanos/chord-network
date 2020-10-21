@@ -140,6 +140,7 @@ namespace ChordNodeServer
       {
          List<KeyValuePair<int, ChordResource>> splitResourceList = new List<KeyValuePair<int, ChordResource>>();
 
+         // If the nodeID is greater than ours, give them all the resources between our IDs
          if(nodeID > ChordID)
          {
             foreach (KeyValuePair<int, ChordResource> resource in resources)
@@ -151,7 +152,7 @@ namespace ChordNodeServer
             }
 
             resources.RemoveAll(resource => resource.Key <= nodeID && resource.Key > ChordID);
-         } else
+         } else  // Otherwise, our new successor has a lower ID, and gets all our resources less than its ID
          {
             foreach (KeyValuePair<int, ChordResource> resource in resources)
             {
@@ -163,7 +164,7 @@ namespace ChordNodeServer
 
             resources.RemoveAll(resource => resource.Key <= nodeID);
          }
-
+         // Finally, if this node is our successor, but also has a lower ID than ours, they should also get all the resources greater than our ID
          if(forSuccessor && nodeID < ChordID)
          {
             foreach (KeyValuePair<int, ChordResource> resource in resources)
