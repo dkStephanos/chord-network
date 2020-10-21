@@ -164,7 +164,7 @@ namespace ChordNodeServer
             resources.RemoveAll(resource => resource.Key <= nodeID);
          }
 
-         if(forSuccessor)
+         if(forSuccessor && nodeID < ChordID)
          {
             foreach (KeyValuePair<int, ChordResource> resource in resources)
             {
