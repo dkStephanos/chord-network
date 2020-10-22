@@ -47,6 +47,7 @@
          this.txtMain.Size = new System.Drawing.Size(776, 428);
          this.txtMain.TabIndex = 0;
          this.txtMain.Text = "";
+         this.txtMain.TextChanged += new System.EventHandler(this.txtMain_TextChanged);
          // 
          // label1
          // 

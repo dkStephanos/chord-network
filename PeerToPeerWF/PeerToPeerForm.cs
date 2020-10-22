@@ -42,14 +42,21 @@ namespace PeerToPeerWF
             SendCommand();
         }
 
-
-        private void commandBox_KeyDown(object sender, KeyEventArgs e)
+      private void commandBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
                 SendCommand();
         }
 
-        private void ProcessCommand(string command)
+      private void txtMain_TextChanged(object sender, EventArgs e)
+      {
+         // set the current caret position to the end
+         txtMain.SelectionStart = txtMain.Text.Length;
+         // scroll it automatically
+         txtMain.ScrollToCaret();
+      }
+
+      private void ProcessCommand(string command)
       {
          var length = command.Length;
          var index = command.IndexOf(' ');
