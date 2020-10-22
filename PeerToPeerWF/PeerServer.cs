@@ -239,6 +239,9 @@ namespace PeerToPeer
             case "updateresources":
                HandleUpdateResources(parameters);
                break;
+            case "poll":
+               HandlePoll(parameters);
+               break;
             default:
                break;
          }
@@ -431,6 +434,30 @@ namespace PeerToPeer
          node.addResources(node.unmarshalResources(parameters[1]));
 
          ReportMessage("Updated resources. Now responsible for " + node.resources.Count + " resources.");
+      }
+
+      // Initiates the poll of the chord structure
+      public void pollChord()
+      {
+         string chordStructure = node.ChordID + ":" + node.PortNumber;
+         clients[node.SuccessorID].SendRequest("poll " + chordStructure);
+      }
+
+      // Appends node info to poll message, and forwards to successor, unless we started the poll, in which case update our finger table
+      public void HandlePoll(string[] parameters)
+      {
+         // First, get the first entry in the chordStructure poll to see if we've come full circle
+         int chordID = Int32.Parse(parameters[1].Split(',')[0].Split(':')[0]);
+         
+         // If the poll has completed the trip around the chord, update our finger table
+         if(chordID == node.ChordID)
+         {
+            node.updateFingerTable(parameters[1]);
+         } else // Otherwise append data and forward to successor
+         {
+            parameters[1] += "," + node.ChordID + ":" + node.PortNumber;
+            clients[node.SuccessorID].SendRequest("poll " + parameters[1]);
+         }
       }
 
    } // end namespace

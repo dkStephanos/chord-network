@@ -163,8 +163,7 @@ namespace PeerToPeerWF
 
       private void TestFingerUpdate(string paramaters)
       {
-         _server.node.updateFingerTable(paramaters);
-         _server.ReportFingerTable();
+         _server.pollChord();
       }
    }
 }
