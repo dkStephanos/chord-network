@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Timers;
 using ChordNodeServer;
 
 namespace PeerToPeer
@@ -20,6 +21,7 @@ namespace PeerToPeer
       private IPEndPoint _localEndPoint;
       private Socket _listener;
       private int _numberOfConnections;
+      private System.Timers.Timer timer;
       private ConcurrentQueue<string> _messages;
       public ChordNode node;
        
@@ -41,6 +43,10 @@ namespace PeerToPeer
          _numberOfConnections = 0;
          SetUpLocalEndPoint();
          node = new ChordNode(portNumber);
+         // Set up timer to poll chord for structure every 15 seconds
+         timer = new System.Timers.Timer(15000);
+         timer.Elapsed += pollChord;
+         timer.Start();
       }
 
       public string GetServerInfo()
@@ -449,7 +455,7 @@ namespace PeerToPeer
       }
 
       // Initiates the poll of the chord structure
-      public void pollChord()
+      public void pollChord(Object source, ElapsedEventArgs e)
       {
          string chordStructure = node.ChordID + ":" + node.PortNumber;
          clients[node.SuccessorID].SendRequest("poll " + chordStructure);
