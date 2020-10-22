@@ -154,6 +154,7 @@ namespace PeerToPeerWF
          _server.ReportServerInfo();
          _server.ReportNodeInfo();
          _server.ReportFingerTable();
+         _server.ReportClients();
       }
 
       private void ProcessShowResources()

@@ -85,6 +85,18 @@ namespace PeerToPeer
          ReportMessage(node.listResources());
       }
 
+      public void ReportClients()
+      {
+         string clientReport = "Current Clients:\n";
+
+         foreach (var client in clients)
+         {
+            clientReport += "NodeID: " + client.Value.ChordID + "\n";
+         }
+
+         ReportMessage(clientReport);
+      }
+
       private void SetUpLocalEndPoint()
       {
          _ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
@@ -453,6 +465,12 @@ namespace PeerToPeer
          if(chordID == node.ChordID)
          {
             node.updateFingerTable(parameters[1]);
+
+            // Then, add all shortcuts in fingerTable to clients if not already there
+            foreach (var entry in node.FingerTable)
+            {
+               AddClient(entry.Value.Key, entry.Value.Value);
+            }
          } else // Otherwise append data and forward to successor
          {
             parameters[1] += "," + node.ChordID + ":" + node.PortNumber;
