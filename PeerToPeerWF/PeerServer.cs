@@ -74,7 +74,7 @@ namespace PeerToPeer
          string fingerTableStr = "";
          foreach(var entry in node.FingerTable)
          {
-            fingerTableStr += "\nShortcut: " + entry.Key + ", NodeID: " + entry.Value;
+            fingerTableStr += "\nShortcut: " + entry.Key + ", NodeID: " + entry.Value.Key + " NodePort: " + entry.Value.Value;
          }
 
          ReportMessage("Finger Table:" + fingerTableStr);

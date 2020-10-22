@@ -39,9 +39,13 @@ namespace ChordNodeServer
          }
          // Initialize the keys for the fingerTable, setting values to -1 (to be set later upon joining, and updated on a timer)
          FingerTable = new Dictionary<int, KeyValuePair<int, int>>(6);
+         int nextID;
          for (int j = 0; j < 6; j++)
          {
-            FingerTable.Add(ChordID + (int)Math.Pow(2, j), -1);
+            // Calculate the nextID for the finger table, if it is greater than 100, subtract 100 because we have circled the chord
+            nextID = ChordID + (int)Math.Pow(2, j);
+            if (nextID > 100) nextID = nextID - 100;
+            FingerTable.Add(nextID, new KeyValuePair<int, int>(-1, -1));
          }
       }
 
@@ -195,25 +199,47 @@ namespace ChordNodeServer
          string[] chordNodes = chordStructure.Split(',');
          int currentID;
          int currentPort;
+         SortedList<int, int> currentChord = new SortedList<int, int>();
+
+         // First step through the nodes in the structure, rip off their ID and port and add to a SortedList by ID
+         foreach (string node in chordNodes)
+         {
+            // Rip off the ID and port number of the current node
+            currentID = Int32.Parse(node.Split(':')[0]);
+            currentPort = Int32.Parse(node.Split(':')[1]);
+
+            currentChord.Add(currentID, currentPort);
+         }
+         
+         // Set up a tempFingerTable to update as we loop through, also set a flag so we know if there isn't a node in the chord >= the entry
+         Dictionary<int, KeyValuePair<int, int>> tempFingerTable = new Dictionary<int, KeyValuePair<int, int>>();
+         bool nodeFound = false;
 
          // Step through each entry in the finger table, so we can assign a node
          foreach (var entry in FingerTable)
          {
             // For each finger table entry, step through the nodes to find the one responsible for the current entry key
-            foreach (string node in chordNodes)
+            foreach (var node in currentChord)
             {
-               // Rip off the ID and port number of the current node
-               currentID = Int32.Parse(node.Split(':')[0]);
-               currentPort = Int32.Parse(node.Split(':')[1]);
-
-               // If the currentID in the structure is >= the finger table key, update the finger table, and break, moving on to the next entry
-               if(currentID >= entry.Key)
+               // If the currentID in the structure is >= the finger table key, update the temp finger table, and break, moving on to the next entry
+               if(node.Key >= entry.Key)
                {
-                  FingerTable[entry.Key] = new KeyValuePair<int, int>(currentID, currentPort);
+                  tempFingerTable.Add(entry.Key, new KeyValuePair<int, int>(node.Key, node.Value));
+                  nodeFound = true;
                   break;
                }
             }
+            // If we get this far and we didn't find a node, we have traveled all the way around the chord, so set the node to the first in the chord
+            if(nodeFound == false)
+            {
+               tempFingerTable.Add(entry.Key, new KeyValuePair<int, int>(currentChord.Keys[0], currentChord.Values[0]));
+            } else // Otherwise, reset the nodeFound bool for the next pass
+            {
+               nodeFound = false;
+            }
          }
+         // Finally, now that we are out of the loop, set the FingerTable to our computed temp
+         FingerTable = tempFingerTable;
       }
 
    } // end ChordNode

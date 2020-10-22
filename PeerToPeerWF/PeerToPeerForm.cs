@@ -80,6 +80,9 @@ namespace PeerToPeerWF
             case "showresources":
                ProcessShowResources();
                break;
+            case "test":
+               TestFingerUpdate(parameters);
+               break;
          }       
       }
 
@@ -156,6 +159,12 @@ namespace PeerToPeerWF
       private void ProcessShowResources()
       {
          _server.ReportResources();
+      }
+
+      private void TestFingerUpdate(string paramaters)
+      {
+         _server.node.updateFingerTable(paramaters);
+         _server.ReportFingerTable();
       }
    }
 }
