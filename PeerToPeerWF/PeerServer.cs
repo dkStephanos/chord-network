@@ -260,6 +260,12 @@ namespace PeerToPeer
             case "poll":
                HandlePoll(parameters);
                break;
+            case "getresource":
+               HandleGetResource(parameters);
+               break;
+            case "resourceresponse":
+               HandleResourceResponse(parameters);
+               break;
             default:
                break;
          }
@@ -482,6 +488,57 @@ namespace PeerToPeer
             parameters[1] += "," + node.ChordID + ":" + node.PortNumber;
             clients[node.SuccessorID].SendRequest("poll " + parameters[1]);
          }
+      }
+
+      public void RequestResource(int resourceID)
+      {
+         // Set bool value to see if we found the responsible node in our finger table
+         bool foundNode = false;
+
+         // Step through our finger table, if we find the responsible node, send a getresource request and set foundNode to true
+         foreach(var entry in node.FingerTable)
+         {
+            if(entry.Value.Key >= resourceID)
+            {
+               // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
+               clients[entry.Value.Key].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
+               foundNode = true;
+               break;
+            }
+         }
+
+         // If we don't find the responsible node, then forward it to the furthest node in our finger table
+         if (foundNode == false)
+         {
+            // Get the furthest offset by adding the furthest power of 2 to our own id
+            int furthestOffset = node.ChordID + (int)Math.Pow(2, node.FingerTable.Count - 1);
+            clients[node.FingerTable[furthestOffset].Key].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
+         }
+      }
+
+      public void HandleGetResource(string[] parameters)
+      {
+         // Parse data from request
+         int resourceID = Int32.Parse(parameters[1]);
+         int requestingNodeID = Int32.Parse(parameters[2].Split(':')[0]);
+         int requestingNodePort = Int32.Parse(parameters[2].Split(':')[1]);
+
+         // If the resourceID is <= to our ID, we are currently in possession of the resource, so send a resourceresponse message with the data
+         if (resourceID <= node.ChordID)
+         {
+            // First add the node as a client if it isn't already there
+            PeerClient client = AddClient(requestingNodeID, requestingNodePort);
+            client.SendRequest("resourceresponse " + node.resources[resourceID].Key + ":" + node.resources[resourceID].Value);
+         } else // Otherwise, call RequestResource to forward the request within the chord
+         {
+            RequestResource(resourceID);
+         }
+      }
+
+      // Takes in the return data for a resource request, and reports the data
+      public void HandleResourceResponse(string[] parameters)
+      {
+         ReportMessage(parameters[1]);
       }
 
    } // end namespace

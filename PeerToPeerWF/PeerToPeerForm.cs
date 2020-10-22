@@ -74,6 +74,9 @@ namespace PeerToPeerWF
             case "exit":
                ProcessExit();
                break;
+            case "request":
+               ProcessResourceRequest(parameters);
+               break;
             case "nodeinfo":
                ProcessNodeInfo();
                break;
@@ -144,6 +147,11 @@ namespace PeerToPeerWF
                   _server.clients[_server.node.SuccessorID].SendRequest("leaverequest " + _server.node.PredecessorID + ":" + _server.node.PredecessorPortNumber + " " + _server.node.marshalResources(_server.node.resources));
                }
             );
+      }
+
+      private void ProcessResourceRequest(string parameters)
+      {
+         _server.RequestResource(Int32.Parse(parameters));
       }
 
       private void ProcessNodeInfo()
