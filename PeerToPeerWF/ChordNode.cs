@@ -14,7 +14,7 @@ namespace ChordNodeServer
       public int SuccessorID { get; set; } = 1;
       public int PredecessorPortNumber { get; set; } = 1;
       public int SuccessorPortNumber { get; set; } = 1;
-      public Dictionary<int, int> FingerTable { get; set; } = new Dictionary<int, int>(6);
+      public Dictionary<int, KeyValuePair<int, int>> FingerTable { get; set; }
 
       public List<KeyValuePair<int, ChordResource>> resources;
 
@@ -38,7 +38,8 @@ namespace ChordNodeServer
             }
          }
          // Initialize the keys for the fingerTable, setting values to -1 (to be set later upon joining, and updated on a timer)
-         for(int j = 0; j < 6; j++)
+         FingerTable = new Dictionary<int, KeyValuePair<int, int>>(6);
+         for (int j = 0; j < 6; j++)
          {
             FingerTable.Add(ChordID + (int)Math.Pow(2, j), -1);
          }
@@ -185,6 +186,34 @@ namespace ChordNodeServer
          }
 
          return splitResourceList;
+      }
+
+      // Takes a list of nodes (ChordID:PortNumber) in order of the current nodes present in the string, and updates the finger table accordingly
+      public void updateFingerTable(string chordStructure)
+      {
+         // Split the chordStructure into its independent nodes
+         string[] chordNodes = chordStructure.Split(',');
+         int currentID;
+         int currentPort;
+
+         // Step through each entry in the finger table, so we can assign a node
+         foreach (var entry in FingerTable)
+         {
+            // For each finger table entry, step through the nodes to find the one responsible for the current entry key
+            foreach (string node in chordNodes)
+            {
+               // Rip off the ID and port number of the current node
+               currentID = Int32.Parse(node.Split(':')[0]);
+               currentPort = Int32.Parse(node.Split(':')[1]);
+
+               // If the currentID in the structure is >= the finger table key, update the finger table, and break, moving on to the next entry
+               if(currentID >= entry.Key)
+               {
+                  FingerTable[entry.Key] = new KeyValuePair<int, int>(currentID, currentPort);
+                  break;
+               }
+            }
+         }
       }
 
    } // end ChordNode
