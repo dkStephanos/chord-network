@@ -536,6 +536,7 @@ namespace PeerToPeer
          {
             // Get the furthest offset by adding the furthest power of 2 to our own id
             int furthestOffset = node.ChordID + (int)Math.Pow(2, node.FingerTable.Count - 1);
+            if (furthestOffset > 100) furthestOffset -= 100;
 
             // Make sure our finger table is updated first, otherwise log a message
             if(node.FingerTable[furthestOffset].Key != -1)
@@ -570,7 +571,53 @@ namespace PeerToPeer
          // Otherwise, forward the request
          if (resourceFound != true)
          {
-            RequestResource(resourceID);
+            ForwardResourceRequest(resourceID, requestingNodeID, requestingNodePort);
+         }
+      }
+
+      public void ForwardResourceRequest(int resourceID, int requestingID, int requestingPort)
+      {
+         bool foundNode = false;
+
+         // First, check our predecessor
+         if (node.PredecessorID >= resourceID && foundNode == false)
+         {
+            // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
+            clients[node.PredecessorID].SendRequest("getresource " + resourceID + " " + requestingID + ":" + requestingPort);
+            foundNode = true;
+         }
+         else // Otherwise, check our fingerTable
+         {
+            // Step through our finger table, if we find the responsible node, send a getresource request and set foundNode to true
+            foreach (var entry in node.FingerTable)
+            {
+               // If the key is >= to the resource ID, that node is responsible, if the value is -1, the finger table has been initialized yet
+               if (entry.Value.Key >= resourceID && entry.Value.Key != -1)
+               {
+                  // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
+                  clients[entry.Value.Key].SendRequest("getresource " + resourceID + " " + requestingID + ":" + requestingPort);
+                  foundNode = true;
+                  break;
+               }
+            }
+         }
+
+         // If we don't find the responsible node, then forward it to the furthest node in our finger table
+         if (foundNode == false)
+         {
+            // Get the furthest offset by adding the furthest power of 2 to our own id
+            int furthestOffset = node.ChordID + (int)Math.Pow(2, node.FingerTable.Count - 1);
+            if (furthestOffset > 100) furthestOffset -= 100;
+
+            // Make sure our finger table is updated first, otherwise just forward to our successor
+            if (node.FingerTable[furthestOffset].Key != -1)
+            {
+               clients[node.FingerTable[furthestOffset].Key].SendRequest("getresource " + resourceID + " " + requestingID + ":" + requestingPort);
+            }
+            else
+            {
+               clients[node.SuccessorID].SendRequest("getresource " + resourceID + " " + requestingID + ":" + requestingPort);
+            }
          }
       }
 
