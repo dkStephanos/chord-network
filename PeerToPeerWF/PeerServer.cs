@@ -535,14 +535,21 @@ namespace PeerToPeer
          int resourceID = Int32.Parse(parameters[1]);
          int requestingNodeID = Int32.Parse(parameters[2].Split(':')[0]);
          int requestingNodePort = Int32.Parse(parameters[2].Split(':')[1]);
+         bool resourceFound = false;
 
-         // If the resourceID is <= to our ID, we are currently in possession of the resource, so send a resourceresponse message with the data
-         if (resourceID <= node.ChordID)
+         // If the requested resource is in  our possession, send a resourceresponse message with the data
+         foreach(var resource in node.resources)
          {
-            // First add the node as a client if it isn't already there
-            PeerClient client = AddClient(requestingNodeID, requestingNodePort);
-            client.SendRequest("resourceresponse " + node.resources[resourceID].Key + ":" + node.resources[resourceID].Value.FilePath);
-         } else // Otherwise, call RequestResource to forward the request within the chord
+            if(resource.Value.ResourceKey == resourceID)
+            {
+               // First add the node as a client if it isn't already there
+               PeerClient client = AddClient(requestingNodeID, requestingNodePort);
+               client.SendRequest("resourceresponse " + resource.Value.ResourceKey + ":" + resource.Value.FilePath);
+               resourceFound = true;
+            }
+         }
+         // Otherwise, forward the request
+         if (resourceFound != true)
          {
             RequestResource(resourceID);
          }
