@@ -158,7 +158,13 @@ namespace PeerToPeerWF
 
       private void ProcessResourceRequest(string parameters)
       {
-         _server.RequestResource(Int32.Parse(parameters));
+         if(Int32.Parse(parameters) < 1 || Int32.Parse(parameters) > 100)
+         {
+            _server.ReportMessage("Requested resource key is not present in chord.");
+         } else
+         {
+            _server.RequestResource(Int32.Parse(parameters));
+         }
       }
 
       private void ProcessNodeInfo()
