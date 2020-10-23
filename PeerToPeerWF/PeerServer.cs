@@ -483,6 +483,9 @@ namespace PeerToPeer
             {
                AddClient(entry.Value.Key, entry.Value.Value);
             }
+
+            // Finally, report that we updated the finger table
+            ReportMessage("Finger Table updated");
          } else // Otherwise append data and forward to successor
          {
             parameters[1] += "," + node.ChordID + ":" + node.PortNumber;
@@ -538,7 +541,7 @@ namespace PeerToPeer
          {
             // First add the node as a client if it isn't already there
             PeerClient client = AddClient(requestingNodeID, requestingNodePort);
-            client.SendRequest("resourceresponse " + node.resources[resourceID].Key + ":" + node.resources[resourceID].Value);
+            client.SendRequest("resourceresponse " + node.resources[resourceID].Key + ":" + node.resources[resourceID].Value.FilePath);
          } else // Otherwise, call RequestResource to forward the request within the chord
          {
             RequestResource(resourceID);
