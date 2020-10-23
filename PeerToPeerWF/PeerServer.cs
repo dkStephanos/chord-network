@@ -103,6 +103,11 @@ namespace PeerToPeer
          ReportMessage(clientReport);
       }
 
+      public void StopPoll()
+      {
+         timer.Stop();
+      }
+
       private void SetUpLocalEndPoint()
       {
          _ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
@@ -515,7 +520,7 @@ namespace PeerToPeer
             // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
             clients[node.PredecessorID].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
             foundNode = true;
-         } else // Otherwise, check our fingerTable
+         } else if (foundNode == false) // Otherwise, check our fingerTable
          {
             // Step through our finger table, if we find the responsible node, send a getresource request and set foundNode to true
             foreach (var entry in node.FingerTable)

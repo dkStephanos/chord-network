@@ -147,6 +147,8 @@ namespace PeerToPeerWF
 
       private void ProcessExit()
       {
+         // Shutdown poll
+         _server.StopPoll();
          Task.Factory.StartNew(
                () => {
                   // To initiate leaving the chord, we alert our successor we are leaving, who its new predecessor is (ours)
