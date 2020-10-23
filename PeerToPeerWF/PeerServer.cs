@@ -510,7 +510,7 @@ namespace PeerToPeer
             foreach (var entry in node.FingerTable)
             {
                // If the key is >= to the resource ID, that node is responsible, if the value is -1, the finger table has been initialized yet
-               if (entry.Value.Key >= resourceID && entry.Value.Value != -1)
+               if (entry.Value.Key >= resourceID && entry.Value.Key != -1)
                {
                   // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
                   clients[entry.Value.Key].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
@@ -525,7 +525,15 @@ namespace PeerToPeer
          {
             // Get the furthest offset by adding the furthest power of 2 to our own id
             int furthestOffset = node.ChordID + (int)Math.Pow(2, node.FingerTable.Count - 1);
-            clients[node.FingerTable[furthestOffset].Key].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
+
+            // Make sure our finger table is updated first, otherwise log a message
+            if(node.FingerTable[furthestOffset].Key != -1)
+            {
+               clients[node.FingerTable[furthestOffset].Key].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
+            } else
+            {
+               ReportMessage("FingerTable waiting on update");
+            }
          }
       }
 
