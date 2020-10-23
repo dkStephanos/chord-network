@@ -495,17 +495,27 @@ namespace PeerToPeer
          // Set bool value to see if we found the responsible node in our finger table
          bool foundNode = false;
 
-         // Step through our finger table, if we find the responsible node, send a getresource request and set foundNode to true
-         foreach(var entry in node.FingerTable)
+         // First, check our predecessor
+         if(node.PredecessorID >= resourceID)
          {
-            if(entry.Value.Key >= resourceID)
+            // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
+            clients[node.PredecessorID].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
+            foundNode = true;
+         } else // Otherwise, check our fingerTable
+         {
+            // Step through our finger table, if we find the responsible node, send a getresource request and set foundNode to true
+            foreach (var entry in node.FingerTable)
             {
-               // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
-               clients[entry.Value.Key].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
-               foundNode = true;
-               break;
+               // If the key is >= to the resource ID, that node is responsible, if the value is -1, the finger table has been initialized yet
+               if (entry.Value.Key >= resourceID && entry.Value.Value != -1)
+               {
+                  // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
+                  clients[entry.Value.Key].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
+                  foundNode = true;
+                  break;
+               }
             }
-         }
+         }      
 
          // If we don't find the responsible node, then forward it to the furthest node in our finger table
          if (foundNode == false)
