@@ -498,8 +498,19 @@ namespace PeerToPeer
          // Set bool value to see if we found the responsible node in our finger table
          bool foundNode = false;
 
+         // First, make sure we aren't currently the owner of the resource
+         foreach (var resource in node.resources)
+         {
+            if (resource.Key == resourceID)
+            {
+               ReportMessage(resource.Value.ResourceKey + ":" + resource.Value.FilePath);
+               foundNode = true;
+               break;
+            }
+         }
+
          // First, check our predecessor
-         if(node.PredecessorID >= resourceID)
+         if(node.PredecessorID >= resourceID && foundNode == false)
          {
             // getresource request contains id of requested resource and ChordID:PortNumber of requesting node
             clients[node.PredecessorID].SendRequest("getresource " + resourceID + " " + node.ChordID + ":" + node.PortNumber);
